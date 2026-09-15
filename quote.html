@@ -207,21 +207,16 @@
 </header>
 <main>
 
-<!-- 報價邏輯圖解說明區塊 (可收合/展開) -->
+<!-- 報價邏輯圖解說明區塊 -->
 <section class="wide" style="background:#f8fafc; border-left: 4px solid var(--orange);">
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <div>
-      <h2 style="margin:0; font-size:14px; color:var(--text);" data-i18n="flowTitle">
-        📌 報價公式與雙軌邏輯指引 (Pricing Logic Flowchart)
-      </h2>
-      <div style="font-size:12px; color:var(--muted); margin-top:3px;" data-i18n="flowSub">
-        點擊右側按鈕查看成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）
-      </div>
-    </div>
-    <button onclick="toggleDiagram()" id="btnDiag" style="padding:4px 10px; font-size:11.5px;" data-i18n="btnExpand">展開圖解</button>
+  <h2 style="margin:0; font-size:14px; color:var(--text);" data-i18n="flowTitle">
+    雙軌報價指引 (Pricing Logic)
+  </h2>
+  <div style="font-size:12px; color:var(--muted); margin-top:3px;" data-i18n="flowSub">
+    成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）
   </div>
 
-  <div id="diagramBox" style="display:none; margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+  <div id="diagramBox" style="margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; font-size:12px;">
       
       <!-- 步驟 1 -->
@@ -274,8 +269,14 @@
 
 
 <section class="wide" id="formulaSection">
-  <h2 data-i18n="formulaTitle">Pricing formulas</h2>
-  <p class="hint" data-i18n="formulaHint">Same layout as the COGS margin identity: name on the left, fraction or expression on the right. Live values update as you type. Orange number is the current result.</p>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h2 style="margin:0;" data-i18n="formulaTitle">報價公式</h2>
+      <p class="hint" style="margin:4px 0 0;" data-i18n="formulaHint">左側是公式名稱，右側是分數或運算式，橘色是依目前輸入算出的值。COGS margin = 銷貨成本 ÷ 淨收入。</p>
+    </div>
+    <button type="button" onclick="toggleFormulas()" id="btnFormula" style="padding:4px 10px; font-size:11.5px;" data-i18n="btnExpand">展開公式</button>
+  </div>
+  <div id="formulaBox" style="display:none; margin-top:12px; border-top:1px solid var(--line); padding-top:12px;">
   <div class="formula-grid">
     <div class="formula">
       <div class="formula-name">Piece area<br>(m² / pc)</div>
@@ -343,6 +344,7 @@
       </div>
       <div class="formula-live" id="fv_gm">—<span>25% markup = 20% margin</span></div>
     </div>
+  </div>
   </div>
 </section>
 <div id="exportErr"></div>
@@ -577,10 +579,10 @@ const I18N = {
     btnReset: "重設預設值 (Reset)",
     btnPrint: "列印 / PDF",
     btnExport: "匯出 Excel 報價單 (.xlsx)",
-    flowTitle: "📌 報價公式與雙軌邏輯指引 (Pricing Logic Flowchart)",
-    flowSub: "點擊右側按鈕查看成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）",
-    btnExpand: "展開圖解",
-    btnCollapse: "收合圖解",
+    flowTitle: "雙軌報價指引 (Pricing Logic)",
+    flowSub: "成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）",
+    btnExpand: "展開公式",
+    btnCollapse: "收合公式",
     step1Title: "Step 1. 尺寸與損耗換算",
     step1Desc: "• <b>單片淨面積</b> ＝ (長 × 寬) ÷ 10⁶ m²<br>• <b>良品淨面積</b> ＝ 單片面積 × 訂購片數 (pcs)<br>• <b>投料毛面積</b> ＝ 良品淨面積 ÷ 綜合良率 (%)<br><span style='color:#d97706; font-weight:600;'>↳ 材料與成形/燒結依投料面積計費</span>",
     step2Title: "Step 2. 工廠製造總成本 (COGS)",
@@ -669,10 +671,10 @@ const I18N = {
     btnReset: "Reset Defaults",
     btnPrint: "Print / PDF",
     btnExport: "Export Quote (.xlsx)",
-    flowTitle: "📌 Pricing Logic & Methodology Flowchart",
-    flowSub: "Click right button to view how raw materials and 4-stage processes build up to Quote A (Volume) and Quote B (Sample).",
-    btnExpand: "Expand Flowchart",
-    btnCollapse: "Collapse Flowchart",
+    flowTitle: "Two-track pricing guide",
+    flowSub: "How raw materials and the four process steps build Quote A (volume) and Quote B (sample).",
+    btnExpand: "Show formulas",
+    btnCollapse: "Hide formulas",
     step1Title: "Step 1. Dimensions & Yield Conversion",
     step1Desc: "• <b>Area / pc</b> = (Length × Width) ÷ 10⁶ m²<br>• <b>Good Area</b> = Area / pc × Pieces (pcs)<br>• <b>Started Area</b> = Good Area ÷ Yield (%)<br><span style='color:#d97706; font-weight:600;'>↳ Raw materials, forming & sintering use Started Area</span>",
     step2Title: "Step 2. Factory Full Cost (COGS)",
@@ -769,10 +771,12 @@ function setLang(lang) {
     if (dict[key]) el.innerHTML = dict[key];
   });
 
-  // 更新圖解展開按鈕文字
-  const box = document.getElementById("diagramBox");
-  const isHide = box.style.display === "none";
-  document.getElementById("btnDiag").textContent = isHide ? dict.btnExpand : dict.btnCollapse;
+  const box = document.getElementById("formulaBox");
+  const btn = document.getElementById("btnFormula");
+  if (box && btn) {
+    const isHide = box.style.display === "none";
+    btn.textContent = isHide ? dict.btnExpand : dict.btnCollapse;
+  }
 
   calc();
 }
@@ -805,9 +809,9 @@ function applySku() {
   calc();
 }
 
-function toggleDiagram() {
-  const box = document.getElementById("diagramBox");
-  const btn = document.getElementById("btnDiag");
+function toggleFormulas() {
+  const box = document.getElementById("formulaBox");
+  const btn = document.getElementById("btnFormula");
   const isHide = box.style.display === "none";
   box.style.display = isHide ? "block" : "none";
   const dict = I18N[currentLang];
