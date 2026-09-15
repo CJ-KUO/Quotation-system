@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CellMo Factory Quote System</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel2: #f7f7f7;
+    --line: #d9d9d9;
+    --text: #111111;
+    --muted: #555555;
+    --orange: #e85d04;
+    --orange2: #f48c06;
+    --green: #1b7f4a;
+    --red: #c1121f;
+    --input: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+  }
+  header {
+    padding: 18px 28px 12px;
+    border-bottom: 2px solid var(--orange);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text); }
+  header h1 span { color: var(--orange); }
+  header p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; max-width: 860px; line-height: 1.45; }
+  .actions { display: flex; gap: 8px; }
+  button {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button.primary { background: var(--orange); border-color: var(--orange); color: #fff; font-weight: 700; }
+  button:hover { filter: brightness(0.97); }
+  main { padding: 16px 28px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  section h2 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 12px; }
+  label { display: block; color: var(--muted); font-size: 11px; margin-bottom: 3px; }
+  input, select {
+    width: 100%;
+    background: var(--input);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 7px 8px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  input:focus, select:focus { outline: 2px solid var(--orange2); }
+  input.money { font-variant-numeric: tabular-nums; text-align: right; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 6px; text-align: right; color: var(--text); }
+  th { color: var(--muted); font-weight: 700; font-size: 11px; }
+  td.l, th.l { text-align: left; }
+  .num { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+  .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+  .kpi div { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+  .kpi span { display: block; color: var(--muted); font-size: 11px; }
+  .kpi b { display: block; font-size: 18px; margin-top: 3px; color: var(--text); }
+  .kpi b.em { color: var(--orange); }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 99px;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    margin-left: 6px;
+    font-weight: 700;
+  }
+  .ok { color: var(--green); }
+  .bad { color: var(--red); }
+  .wide { grid-column: 1 / -1; }
+  @media print {
+    button { display: none; }
+    body { background: white; color: #111; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>CellMo <span>two-track quote</span></h1>
+    <p>Quote A is the factory profit center only. Quote B adds the R&amp;D cost center. All money is USD. All inputs can be edited. Area is in m². You can enter length and width to get pcs. Yield is included.</p>
+  </div>
+  <div class="actions">
+    <button onclick="resetDefaults()">Reset defaults</button>
+    <button class="primary" onclick="window.print()">Print / PDF</button>
+  </div>
+</header>
+<main>
+<section>
+  <h2>Order and size</h2>
+  <div class="grid3">
+    <div><label>Length</label><input id="len" type="number" value="200" oninput="calc()"></div>
+    <div><label>Width</label><input id="wid" type="number" value="200" oninput="calc()"></div>
+    <div>
+      <label>Unit</label>
+      <select id="unit" onchange="calc()">
+        <option value="mm" selected>mm</option>
+        <option value="cm">cm</option>
+        <option value="m">m</option>
+        <option value="in">inch</option>
+      </select>
+    </div>
+    <div><label>Pieces (pcs)</label><input id="pcs" type="number" value="25" oninput="fromPcs()"></div>
+    <div><label>Good output m² (edit this to back-solve pcs)</label><input id="goodM2" type="number" value="1" step="0.0001" oninput="fromGood()"></div>
+    <div><label>Yield % (started m² = good m² / yield)</label><input id="yieldPct" type="number" value="85" step="0.1" oninput="calc()"></div>
+  </div>
+  <div class="kpi">
+    <div><span>Area per piece</span><b id="kAreaPc">—</b></div>
+    <div><span>Started area (incl. yield loss)</span><b id="kStartM2">—</b></div>
+  </div>
+  <p class="hint">At 85% yield, 1.176 m² must be started for each 1 m² shipped. Materials, forming and sintering default to started area. Machining and QC default to good area. You can change the basis on each line.</p>
+</section>
+
+<section>
+  <h2>Factory and R&amp;D assumptions (USD)</h2>
+  <div class="grid3">
+    <div><label>Annual allocation base (good m² / year)</label><input id="allocM2" type="number" value="1000" oninput="calc()"></div>
+    <div><label>Factory markup % on full factory cost</label><input id="factoryMark" type="number" value="25" step="0.1" oninput="calc()"></div>
+    <div><label>List price check (USD / m²)</label><input id="listPx" class="money" type="text" inputmode="decimal" value="$500"></div>
+    <div><label>Full plant rent + indirect labor USD / year</label><input id="rentYr" class="money" type="text" inputmode="decimal" value="$258,065"></div>
+    <div><label>Full plant equipment depreciation USD / year</label><input id="eqYr" class="money" type="text" inputmode="decimal" value="$129,032"></div>
+    <div><label>Full plant shared utilities USD / year</label><input id="utilYr" class="money" type="text" inputmode="decimal" value="$64,516"></div>
+    <div><label>This product line share of plant capacity %</label><input id="lineUtilPct" type="number" value="100" min="0" max="100" step="0.5" oninput="calc()"></div>
+    <div><label>R&amp;D cost center budget USD / year (check only)</label><input id="rdYr" class="money" type="text" inputmode="decimal" value="$967,742"></div>
+    <div>
+      <label>R&amp;D % is based on</label>
+      <select id="rdBase" onchange="calc()">
+        <option value="price" selected>Selling price</option>
+        <option value="factory">Factory full cost</option>
+      </select>
+    </div>
+    <div><label>R&amp;D share % (edit this)</label><input id="rdPct" type="number" value="15" min="0" max="90" step="0.5" oninput="calc()"></div>
+  </div>
+  <p class="hint">Quote B puts R&amp;D on top of Quote A by the % you type. Default 15% of selling price. Change the % anytime. The yearly R&amp;D budget is only a check: at your allocation volume, does this % bring in enough to cover the budget.</p>
+</section>
+
+<section class="wide">
+  <h2>Variable cost (USD / m²) — labor, energy, tool wear included</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="l">Item</th>
+        <th>USD / m²</th>
+        <th>Basis</th>
+        <th>m² this order</th>
+        <th>Order cost USD</th>
+        <th>USD / good m²</th>
+      </tr>
+    </thead>
+    <tbody id="varBody"></tbody>
+  </table>
+  <p class="hint">Placeholder split of $300 variable COGS: materials 180, forming 40, sintering 45, machining 25, QC 10. Replace with landed BOM and actual process rates.</p>
+</section>
+
+<section>
+  <h2>Quote A · Factory profit center<span class="tag">volume / factory ship</span></h2>
+  <table><tbody id="quoteA"></tbody></table>
+  <div class="kpi">
+    <div><span>Suggested price A</span><b class="em" id="aPrice">—</b></div>
+    <div><span>Factory margin on this order</span><b id="aGp">—</b></div>
+  </div>
+  <p class="hint">A only covers factory variable + factory fixed + factory markup. Do not use A for first-article, custom formula or validation samples.</p>
+</section>
+
+<section>
+  <h2>Quote B · Factory + R&amp;D cost center<span class="tag">sample / custom</span></h2>
+  <table><tbody id="quoteB"></tbody></table>
+  <div class="kpi">
+    <div><span>Suggested price B</span><b class="em" id="bPrice">—</b></div>
+    <div><span>Contribution vs factory full cost</span><b id="bGp">—</b></div>
+  </div>
+  <p class="hint">Change R&amp;D share % in the assumptions box. If the base is selling price, 15% means R&amp;D is 15% of the final B price, not 15% of A. If the base is factory full cost, R&amp;D is that % of factory cost added on top of A.</p>
+</section>
+
+<section class="wide">
+  <h2>Compare</h2>
+  <div class="kpi" style="grid-template-columns:repeat(4,1fr)">
+    <div><span>A USD / m²</span><b class="em" id="cA">—</b></div>
+    <div><span>B USD / m²</span><b class="em" id="cB">—</b></div>
+    <div><span>B minus A</span><b id="cDiff">—</b></div>
+    <div><span>List price vs factory full cost</span><b id="c500">—</b></div>
+  </div>
+  <p class="hint" id="advice"></p>
+</section>
+</main>
+
+<script>
+const VAR_DEFAULTS = [
+  { id: "mat", name: "1. Materials", usd: 180, base: "start" },
+  { id: "form", name: "2. Forming (labor / energy / consumables)", usd: 40, base: "start" },
+  { id: "sint", name: "3. Sintering (labor / energy / consumables)", usd: 45, base: "start" },
+  { id: "mach", name: "4. Machining (labor / tools / energy)", usd: 25, base: "good" },
+  { id: "qc", name: "5. QC (labor / inspection)", usd: 10, base: "good" },
+];
+
+function parseMoney(v) {
+  if (typeof v === "number") return v;
+  const s = String(v == null ? "" : v).replace(/[^0-9.-]/g, "");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function n(id) {
+  const el = document.getElementById(id);
+  if (!el) return 0;
+  return parseMoney(el.value);
+}
+function fmtMoney(x, d) {
+  const dec = d == null ? 0 : d;
+  const sign = x < 0 ? "-" : "";
+  return sign + "$" + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function money(x) { return fmtMoney(x, 2); }
+function bindMoney(el, decimals) {
+  const d = decimals == null ? 0 : decimals;
+  el.addEventListener("blur", () => {
+    el.value = fmtMoney(parseMoney(el.value), d);
+    calc();
+  });
+  el.addEventListener("input", calc);
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { el.blur(); }
+  });
+}
+
+function toM(val, unit) {
+  if (unit === "mm") return val / 1000;
+  if (unit === "cm") return val / 100;
+  if (unit === "in") return val * 0.0254;
+  return val;
+}
+function areaPc() {
+  const u = document.getElementById("unit").value;
+  return toM(n("len"), u) * toM(n("wid"), u);
+}
+
+let lock = null;
+function fromPcs() { lock = "pcs"; calc(); }
+function fromGood() { lock = "good"; calc(); }
+
+function calc() {
+  const aPc = areaPc();
+  let pcs = n("pcs");
+  let good = n("goodM2");
+  const y = Math.max(n("yieldPct"), 0.01) / 100;
+
+  if (lock === "pcs") {
+    good = pcs * aPc;
+    document.getElementById("goodM2").value = good.toFixed(4);
+  } else if (lock === "good") {
+    pcs = aPc > 0 ? good / aPc : 0;
+    document.getElementById("pcs").value = pcs.toFixed(2);
+  } else {
+    good = pcs * aPc;
+    document.getElementById("goodM2").value = good.toFixed(4);
+  }
+
+  const start = good / y;
+  document.getElementById("kAreaPc").textContent = aPc.toFixed(6) + " m²";
+  document.getElementById("kStartM2").textContent = start.toFixed(4) + " m²";
+
+  const alloc = Math.max(n("allocM2"), 0.0001);
+  const share = Math.min(Math.max(n("lineUtilPct"), 0), 100) / 100;
+  const rent = n("rentYr") * share / alloc;
+  const eq = n("eqYr") * share / alloc;
+  const util = n("utilYr") * share / alloc;
+  const factoryFixedPer = rent + eq + util;
+  const lineFixedYear = (n("rentYr") + n("eqYr") + n("utilYr")) * share;
+
+  const rows = VAR_DEFAULTS.map(v => {
+    const el = document.getElementById("u_" + v.id);
+    const baseEl = document.getElementById("b_" + v.id);
+    const usd = el ? parseMoney(el.value) : v.usd;
+    const base = baseEl ? baseEl.value : v.base;
+    const m2 = base === "start" ? start : good;
+    const line = usd * m2;
+    const perGood = good > 0 ? line / good : 0;
+    return { ...v, usd, base, m2, line, perGood };
+  });
+
+  const varPerGood = rows.reduce((s, r) => s + r.perGood, 0);
+  const factoryFull = varPerGood + factoryFixedPer;
+  const mark = n("factoryMark") / 100;
+  const priceA = factoryFull * (1 + mark);
+  const gpA_per = priceA - factoryFull;
+  const gpA = gpA_per * good;
+
+  const rdBase = document.getElementById("rdBase").value;
+  const rdAlloc = n("rdYr") / alloc;
+  const rdPct = Math.max(n("rdPct"), 0) / 100;
+  let priceB, rdPer;
+  if (rdBase === "factory") {
+    rdPer = factoryFull * rdPct;
+    priceB = priceA + rdPer;
+  } else {
+    const den = Math.max(1 - rdPct, 0.05);
+    priceB = priceA / den;
+    rdPer = priceB * rdPct;
+  }
+  const gpB = (priceB - factoryFull) * good;
+  const rdYearRecovered = rdPer * alloc;
+
+  renderVar(rows);
+  renderA({ varPerGood, rent, eq, util, factoryFull, priceA, gpA, gpA_per, good, share, lineFixedYear });
+  renderB({ priceA, rdPer, rdAlloc, priceB, gpB, good, rdYearRecovered, rdPct, rdBase });
+
+  document.getElementById("cA").textContent = money(priceA);
+  document.getElementById("cB").textContent = money(priceB);
+  document.getElementById("cDiff").textContent = money(priceB - priceA);
+  const list = n("listPx");
+  const cover = list - factoryFull;
+  const el500 = document.getElementById("c500");
+  el500.textContent = cover >= 0 ? "covers, leftover " + money(cover) : "short " + money(cover);
+  el500.className = cover >= 0 ? "ok" : "bad";
+
+  const adv = [];
+  adv.push("This line is set at " + n("lineUtilPct") + "% of plant capacity, so it takes " + money(lineFixedYear) + " of plant fixed cost per year.");
+  adv.push("Factory full cost is " + money(factoryFull) + " per good m² (variable " + money(varPerGood) + " + fixed " + money(factoryFixedPer) + ").");
+  adv.push("Use A for volume ship: " + money(priceA) + " / m².");
+  adv.push("Use B for R&D samples: " + money(priceB) + " / m², with R&D at " + n("rdPct") + "% of " + (rdBase === "factory" ? "factory full cost" : "selling price") + ".");
+  adv.push("At " + alloc.toLocaleString("en-US") + " m² / year this % would recover " + money(rdYearRecovered) + " of R&D vs budget " + money(n("rdYr")) + ".");
+  if (rdYearRecovered + 0.5 < n("rdYr")) {
+    adv.push("This % does not cover the yearly R&D budget at the current allocation volume. Raise the % or the volume.");
+  }
+  if (priceA > list) {
+    adv.push("A is above the list price check. Either markup is high, or fixed cost is too heavy on this allocation volume.");
+  }
+  document.getElementById("advice").textContent = adv.join(" ");
+}
+
+function renderVar(rows) {
+  const active = document.activeElement;
+  const activeId = active && active.id;
+  const activeVal = activeId && document.getElementById(activeId) ? document.getElementById(activeId).value : null;
+  const activePos = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
+  document.getElementById("varBody").innerHTML = rows.map(r => `
+    <tr>
+      <td class="l">${r.name}</td>
+      <td><input id="u_${r.id}" class="money" type="text" inputmode="decimal" value="${activeId === "u_" + r.id && activeVal != null ? activeVal : fmtMoney(r.usd, 2)}"></td>
+      <td>
+        <select id="b_${r.id}" onchange="calc()">
+          <option value="start" ${r.base==="start"?"selected":""}>Started area</option>
+          <option value="good" ${r.base==="good"?"selected":""}>Good area</option>
+        </select>
+      </td>
+      <td class="num">${r.m2.toFixed(4)}</td>
+      <td class="num">${money(r.line)}</td>
+      <td class="num">${money(r.perGood)}</td>
+    </tr>`).join("") + `
+    <tr>
+      <td class="l"><b>Variable total (per good m²)</b></td>
+      <td></td><td></td><td></td><td></td>
+      <td class="num"><b>${money(rows.reduce((s,r)=>s+r.perGood,0))}</b></td>
+    </tr>`;
+  if (activeId && document.getElementById(activeId)) {
+    const el = document.getElementById(activeId);
+    el.focus();
+    if (activePos != null) {
+      try { el.setSelectionRange(activePos, activePos); } catch (e) {}
+    }
+  }
+}
+
+function row(l, v) { return `<tr><td class="l">${l}</td><td class="num">${v}</td></tr>`; }
+
+function renderA(x) {
+  document.getElementById("quoteA").innerHTML =
+    row("This line share of plant capacity", (n("lineUtilPct")) + "%") +
+    row("Factory fixed charged to this line / year", money(x.lineFixedYear)) +
+    row("Variable cost / good m²", money(x.varPerGood)) +
+    row("Rent + indirect / m²", money(x.rent)) +
+    row("Equipment depreciation / m²", money(x.eq)) +
+    row("Shared utilities / m²", money(x.util)) +
+    row("<b>Factory full cost / m²</b>", "<b>" + money(x.factoryFull) + "</b>") +
+    row("Factory markup " + n("factoryMark") + "%", money(x.gpA_per)) +
+    row("<b>Suggested unit price A</b>", "<b>" + money(x.priceA) + " / m²</b>") +
+    row("Good m² this order", x.good.toFixed(4)) +
+    row("Suggested order total A", money(x.priceA * x.good)) +
+    row("Factory margin this order", money(x.gpA));
+  document.getElementById("aPrice").textContent = money(x.priceA) + " / m²";
+  document.getElementById("aGp").textContent = money(x.gpA);
+}
+
+function renderB(x) {
+  document.getElementById("quoteB").innerHTML =
+    row("Factory price A / m²", money(x.priceA)) +
+    row("R&D share", n("rdPct") + "% of " + (x.rdBase === "factory" ? "factory full cost" : "selling price")) +
+    row("R&D on this quote / m²", money(x.rdPer)) +
+    row("Year R&D recovered if volume = allocation base", money(x.rdYearRecovered)) +
+    row("Year R&D budget (check)", money(n("rdYr"))) +
+    row("<b>Suggested unit price B</b>", "<b>" + money(x.priceB) + " / m²</b>") +
+    row("Good m² this order", x.good.toFixed(4)) +
+    row("Suggested order total B", money(x.priceB * x.good)) +
+    row("Contribution vs factory full cost", money(x.gpB));
+  document.getElementById("bPrice").textContent = money(x.priceB) + " / m²";
+  document.getElementById("bGp").textContent = money(x.gpB);
+}
+
+function resetDefaults() {
+  if (!confirm("Reset to page defaults?")) return;
+  location.reload();
+}
+
+["listPx", "rentYr", "eqYr", "utilYr", "rdYr"].forEach(id => {
+  const el = document.getElementById(id);
+  const decimals = id === "listPx" ? 2 : 0;
+  bindMoney(el, decimals);
+  el.value = fmtMoney(parseMoney(el.value), decimals);
+});
+
+document.getElementById("varBody").addEventListener("input", (e) => {
+  if (e.target && e.target.classList.contains("money")) calc();
+});
+document.getElementById("varBody").addEventListener("blur", (e) => {
+  if (e.target && e.target.classList.contains("money")) {
+    e.target.value = fmtMoney(parseMoney(e.target.value), 2);
+    calc();
+  }
+}, true);
+
+calc();
+</script>
+</body>
+</html>
