@@ -112,7 +112,7 @@
 <body>
 <header>
   <div>
-    <h1>CellMo <span>two-track quote v0.1</span></h1>
+    <h1>CellMo <span>two-track quote V0.2</span></h1>
     <p>Quote A is the factory profit center only. Quote B adds the R&amp;D cost center. All money is USD. All inputs can be edited. Area is in m². You can enter length and width to get pcs. Yield is included.</p>
   </div>
   <div class="actions">
@@ -165,6 +165,7 @@
       </select>
     </div>
     <div><label>R&amp;D share % (edit this)</label><input id="rdPct" type="number" value="15" min="0" max="90" step="0.5" oninput="calc()"></div>
+    <div><label>One-time NRE / setup fee USD (Quote B only)</label><input id="nreFee" class="money" type="text" inputmode="decimal" value="$1,500"></div>
   </div>
   <p class="hint">Quote B puts R&amp;D on top of Quote A by the % you type. Default 15% of selling price. Change the % anytime. The yearly R&amp;D budget is only a check: at your allocation volume, does this % bring in enough to cover the budget.</p>
 </section>
@@ -201,8 +202,8 @@
   <h2>Quote B · Factory + R&amp;D cost center<span class="tag">sample / custom</span></h2>
   <table><tbody id="quoteB"></tbody></table>
   <div class="kpi">
-    <div><span>Suggested price B</span><b class="em" id="bPrice">—</b></div>
-    <div><span>Contribution vs factory full cost</span><b id="bGp">—</b></div>
+    <div><span>Unit price B (no NRE)</span><b class="em" id="bPrice">—</b></div>
+    <div><span>Sample package total (incl. NRE)</span><b class="em" id="bGp">—</b></div>
   </div>
   <p class="hint">Change R&amp;D share % in the assumptions box. If the base is selling price, 15% means R&amp;D is 15% of the final B price, not 15% of A. If the base is factory full cost, R&amp;D is that % of factory cost added on top of A.</p>
 </section>
@@ -333,10 +334,14 @@ function calc() {
   }
   const gpB = (priceB - factoryFull) * good;
   const rdYearRecovered = rdPer * alloc;
+  const nre = Math.max(n("nreFee"), 0);
+  const prodB = priceB * good;
+  const dealB = prodB + nre;
+  const rdRecoup = rdPer * good + nre;
 
   renderVar(rows);
   renderA({ varPerGood, rent, eq, util, factoryFull, priceA, gpA, gpA_per, good, share, lineFixedYear });
-  renderB({ priceA, rdPer, rdAlloc, priceB, gpB, good, rdYearRecovered, rdPct, rdBase });
+  renderB({ priceA, rdPer, rdAlloc, priceB, gpB, good, rdYearRecovered, rdPct, rdBase, nre, prodB, dealB, rdRecoup });
 
   document.getElementById("cA").textContent = money(priceA);
   document.getElementById("cB").textContent = money(priceB);
@@ -422,12 +427,15 @@ function renderB(x) {
     row("R&D on this quote / m²", money(x.rdPer)) +
     row("Year R&D recovered if volume = allocation base", money(x.rdYearRecovered)) +
     row("Year R&D budget (check)", money(n("rdYr"))) +
-    row("<b>Suggested unit price B</b>", "<b>" + money(x.priceB) + " / m²</b>") +
+    row("<b>Suggested unit price B (no NRE)</b>", "<b>" + money(x.priceB) + " / m²</b>") +
     row("Good m² this order", x.good.toFixed(4)) +
-    row("Suggested order total B", money(x.priceB * x.good)) +
-    row("Contribution vs factory full cost", money(x.gpB));
+    row("Product total B", money(x.prodB)) +
+    row("One-time NRE / setup", money(x.nre)) +
+    row("<b>Sample package total</b>", "<b>" + money(x.dealB) + "</b>") +
+    row("R&D recoup this deal (share + NRE)", money(x.rdRecoup)) +
+    row("Factory margin in product (ex-NRE)", money(x.gpB));
   document.getElementById("bPrice").textContent = money(x.priceB) + " / m²";
-  document.getElementById("bGp").textContent = money(x.gpB);
+  document.getElementById("bGp").textContent = money(x.dealB);
 }
 
 function resetDefaults() {
@@ -435,9 +443,9 @@ function resetDefaults() {
   location.reload();
 }
 
-["listPx", "rentYr", "eqYr", "utilYr", "rdYr"].forEach(id => {
+["listPx", "rentYr", "eqYr", "utilYr", "rdYr", "nreFee"].forEach(id => {
   const el = document.getElementById(id);
-  const decimals = id === "listPx" ? 2 : 0;
+  const decimals = (id === "listPx" || id === "nreFee") ? 2 : 0;
   bindMoney(el, decimals);
   el.value = fmtMoney(parseMoney(el.value), decimals);
 });
