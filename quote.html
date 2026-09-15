@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CellMo Two-Track Quote V0.4</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel2: #f8fafc;
+    --line: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --orange: #e85d04;
+    --orange2: #f48c06;
+    --green: #16a34a;
+    --red: #dc2626;
+    --input: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13.5px;
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 2px solid var(--orange);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--text); }
+  header h1 span { color: var(--orange); }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; max-width: 940px; line-height: 1.45; }
+  .actions { display: flex; gap: 8px; align-items: center; }
+  button {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+  button.primary { background: var(--orange); border-color: var(--orange); color: #fff; }
+  button.lang-btn { background: #0f172a; color: #fff; border-color: #0f172a; }
+  button:hover { filter: brightness(0.96); }
+  main { padding: 16px 24px 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  section h2 {
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: var(--orange);
+    font-weight: 700;
+  }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px 12px; }
+  label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+  input, select {
+    width: 100%;
+    background: var(--input);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--orange2); }
+  input.money { font-variant-numeric: tabular-nums; text-align: right; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px 6px; text-align: right; }
+  th { color: var(--muted); font-weight: 700; font-size: 11px; background: #fafafa; }
+  td.l, th.l { text-align: left; }
+  .num { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+  .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+  .kpi div { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+  .kpi span { display: block; color: var(--muted); font-size: 11px; }
+  .kpi b { display: block; font-size: 17px; margin-top: 2px; color: var(--text); }
+  .kpi b.em { color: var(--orange); }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    margin-left: 6px;
+    font-weight: 700;
+  }
+  .ok { color: var(--green); }
+  .bad { color: var(--red); }
+  .wide { grid-column: 1 / -1; }
+  .sample-tier-box {
+    background: #fff8f1;
+    border: 1px dashed var(--orange2);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+
+  input.field-error, select.field-error {
+    border-color: #dc2626 !important;
+    background: #fef2f2 !important;
+    outline: 2px solid #fecaca;
+  }
+  label.field-error-label { color: #dc2626 !important; }
+  #exportErr {
+    display: none;
+    grid-column: 1 / -1;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  #exportErr.show { display: block; }
+  .formula-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .formula {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    min-height: 84px;
+  }
+  .formula-name {
+    color: #0891b2;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.25;
+    flex: 0 0 148px;
+  }
+  .formula-eq { color: #64748b; font-size: 20px; font-weight: 600; }
+  .formula-frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 650;
+    color: #0f172a;
+    line-height: 1.25;
+  }
+  .formula-frac .num { padding: 2px 8px 5px; }
+  .formula-frac .den { padding: 5px 8px 2px; border-top: 2px solid #0f172a; }
+  .formula-expr {
+    font-size: 13.5px;
+    font-weight: 650;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+  .formula-live {
+    margin-left: auto;
+    text-align: right;
+    color: var(--orange);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .formula-live span { display: block; color: var(--muted); font-weight: 600; font-size: 10px; }
+  @media print {
+    button { display: none; }
+    body { background: white; color: #111; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>CellMo <span data-i18n="appTitle">Two-Track Quote V0.4</span></h1>
+    <p data-i18n="headerDesc">
+      • <b>Quote A (工廠量產軌道)：</b>工廠利潤中心，反映製程變動成本 ＋ 設備年化攤提 ＋ 目標製造毛利。<br>
+      • <b>Quote B (研發打樣軌道)：</b>分為「標準品打樣 (1.5x 單價，免 NRE，MOQ 20)」與「客製研發打樣 (NRE $1,500~$3,000 覆蓋調機 ＋ 15% RD 分攤)」。<br>
+      • <b>Excel 匯出：</b>一律以 <b>pcs (片)</b> 為計價基準與單價呈現。
+    </p>
+  </div>
+  <div class="actions">
+    <button class="lang-btn" onclick="toggleLang()" id="btnLang">English</button>
+    <button onclick="resetDefaults()" data-i18n="btnReset">重設預設值</button>
+    <button onclick="window.print()" data-i18n="btnPrint">列印 / PDF</button>
+    <button class="primary" onclick="exportQuote()" data-i18n="btnExport">匯出 Excel 報價單 (.xlsx)</button>
+  </div>
+</header>
+<main>
+
+<!-- 報價邏輯圖解說明區塊 (可收合/展開) -->
+<section class="wide" style="background:#f8fafc; border-left: 4px solid var(--orange);">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+      <h2 style="margin:0; font-size:14px; color:var(--text);" data-i18n="flowTitle">
+        📌 報價公式與雙軌邏輯指引 (Pricing Logic Flowchart)
+      </h2>
+      <div style="font-size:12px; color:var(--muted); margin-top:3px;" data-i18n="flowSub">
+        點擊右側按鈕查看成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）
+      </div>
+    </div>
+    <button onclick="toggleDiagram()" id="btnDiag" style="padding:4px 10px; font-size:11.5px;" data-i18n="btnExpand">展開圖解</button>
+  </div>
+
+  <div id="diagramBox" style="display:none; margin-top:14px; border-top:1px solid var(--line); padding-top:12px;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:12px; font-size:12px;">
+      
+      <!-- 步驟 1 -->
+      <div style="background:#fff; border:1px solid var(--line); border-radius:6px; padding:10px;">
+        <b style="color:var(--orange);" data-i18n="step1Title">Step 1. 尺寸與損耗換算</b>
+        <div style="color:var(--muted); margin-top:6px; line-height:1.55;" data-i18n="step1Desc">
+          • <b>單片淨面積</b> ＝ (長 × 寬) ÷ 10⁶ m²<br>
+          • <b>良品淨面積</b> ＝ 單片面積 × 訂購片數 (pcs)<br>
+          • <b>投料毛面積</b> ＝ 良品淨面積 ÷ 綜合良率 (%)<br>
+          <span style="color:#d97706; font-weight:600;">↳ 材料與成形/燒結依投料面積計費</span>
+        </div>
+      </div>
+
+      <!-- 步驟 2 -->
+      <div style="background:#fff; border:1px solid var(--line); border-radius:6px; padding:10px;">
+        <b style="color:var(--orange);" data-i18n="step2Title">Step 2. 工廠製造總成本 (COGS)</b>
+        <div style="color:var(--muted); margin-top:6px; line-height:1.55;" data-i18n="step2Desc">
+          • <b>變動成本</b> ＝ 原材料 + 成形 + 燒結 + 加工 + 品檢<br>
+          • <b>固定攤提</b> ＝ (廠租 + 設備折舊 + 公用) ÷ 年基準產能<br>
+          • <b>出廠總成本</b> ＝ 製程變動成本 ＋ 單位固定攤提<br>
+          <span style="color:#16a34a; font-weight:600;">↳ 代表工廠純製造自負盈虧底線</span>
+        </div>
+      </div>
+
+      <!-- 步驟 3: Quote A -->
+      <div style="background:#fff; border:1px solid #bbf7d0; border-radius:6px; padding:10px;">
+        <b style="color:#15803d;" data-i18n="step3Title">Quote A (量產大貨商用)</b>
+        <div style="color:var(--muted); margin-top:6px; line-height:1.55;" data-i18n="step3Desc">
+          • <b>單價公式</b> ＝ COGS × (1 ＋ 工廠目標毛利%)<br>
+          • <b>計價單位</b> ＝ 以出貨 pcs 為核心基準報價<br>
+          • <b>適用場景</b> ＝ 標準規格大貨批量訂單<br>
+          <span style="color:#15803d; font-weight:600;">↳ 確保工廠作為利潤中心維持盈利</span>
+        </div>
+      </div>
+
+      <!-- 步驟 4: Quote B -->
+      <div style="background:#fff; border:1px solid #fde68a; border-radius:6px; padding:10px;">
+        <b style="color:#b45309;" data-i18n="step4Title">Quote B (研發樣品打樣)</b>
+        <div style="color:var(--muted); margin-top:6px; line-height:1.55;" data-i18n="step4Desc">
+          • <b>標準現品</b> ＝ Quote A × 1.5 倍 (免收 NRE，MOQ 20)<br>
+          • <b>客製研發</b> ＝ 單價含 15% RD + 一次性 NRE ($1,500+)<br>
+          • <b>商業條款</b> ＝ 客製 NRE 註記大貨量產時折抵返還<br>
+          <span style="color:#b45309; font-weight:600;">↳ 覆蓋調機損耗，避免工程師做白工</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<section class="wide" id="formulaSection">
+  <h2 data-i18n="formulaTitle">Pricing formulas</h2>
+  <p class="hint" data-i18n="formulaHint">Same layout as the COGS margin identity: name on the left, fraction or expression on the right. Live values update as you type. Orange number is the current result.</p>
+  <div class="formula-grid">
+    <div class="formula">
+      <div class="formula-name">Piece area<br>(m² / pc)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Length × Width</div>
+        <div class="den">unit scale to m²</div>
+      </div>
+      <div class="formula-live" id="fv_piece">—<span>per piece</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">Started area<br>(m²)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Good output m²</div>
+        <div class="den">Yield</div>
+      </div>
+      <div class="formula-live" id="fv_start">—<span>incl. yield loss</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">COGS<br>(USD / m²)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Variable process + factory fixed</div>
+        <div class="den">Good m² (yield-adjusted)</div>
+      </div>
+      <div class="formula-live" id="fv_cogs">—<span>factory floor</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">Quote A<br>(volume)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-expr">COGS × (1 + factory markup %)</div>
+      <div class="formula-live" id="fv_a">—<span>USD / m² and / pc</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">Quote B<br>standard</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-expr">Quote A × sample multiplier</div>
+      <div class="formula-live" id="fv_bstd">—<span>no NRE</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">Quote B<br>custom R&D</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Quote A</div>
+        <div class="den">1 − R&D share %</div>
+      </div>
+      <div class="formula-live" id="fv_bcustom">—<span>+ NRE on the deal</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">COGS margin<br>(%)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Cost of Goods Sold</div>
+        <div class="den">Net Revenue</div>
+      </div>
+      <div class="formula-live" id="fv_cogsM">—<span>COGS ÷ issued unit price</span></div>
+    </div>
+    <div class="formula">
+      <div class="formula-name">Factory GM<br>(%)</div>
+      <div class="formula-eq">=</div>
+      <div class="formula-frac">
+        <div class="num">Markup %</div>
+        <div class="den">1 + Markup %</div>
+      </div>
+      <div class="formula-live" id="fv_gm">—<span>25% markup = 20% margin</span></div>
+    </div>
+  </div>
+</section>
+<div id="exportErr"></div>
+
+<!-- 區塊 1: 報價模式與外銷行政參數 -->
+<section>
+  <h2 data-i18n="sec1Title">1. 報價模式與客戶規格 (Quote Track &amp; Admin)</h2>
+  <div class="grid3">
+    <div>
+      <label data-i18n="lblTrack">發行報價軌道 (Issue as)</label>
+      <select id="track" onchange="toggleTrack()">
+        <option value="A" data-i18n="optTrackA">Quote A — 工廠利潤中心 (大貨量產)</option>
+        <option value="B" selected data-i18n="optTrackB">Quote B — 研發費用中心 (樣品打樣)</option>
+      </select>
+    </div>
+    <div>
+      <label data-i18n="lblSku">標準品規格快選 (Product SKU)</label>
+      <select id="sku" onchange="applySku()">
+        <option value="custom" data-i18n="optCustom">Custom (自行輸入規格)</option>
+        <option value="nifeal_pte">Ni/FeAl PTE (70x70 mm)</option>
+        <option value="ni_foam">Ni foam (200x200 mm)</option>
+        <option value="ti_foam">Ti foam (100x100 mm)</option>
+      </select>
+    </div>
+    <div><label data-i18n="lblProdName">品名規格 (Product Name)</label><input id="prodName" type="text" value="Ni/FeAl PTE" oninput="calc()"></div>
+    <div><label data-i18n="lblCust">客戶公司 (Customer)</label><input id="custName" type="text" value="" placeholder="Client Inc." oninput="calc()"></div>
+    <div><label data-i18n="lblContact">聯絡人 (Contact)</label><input id="custContact" type="text" value="" oninput="calc()"></div>
+    <div><label data-i18n="lblEmail">電子信箱 (Email)</label><input id="custEmail" type="text" value="" oninput="calc()"></div>
+    <div>
+      <label data-i18n="lblCountry">國家碼 (Quote# 規則)</label>
+      <select id="ccode" onchange="calc()">
+        <option value="U" selected>U (Australia / 澳洲)</option>
+        <option value="S">S (USA / 美國)</option>
+        <option value="T">T (Taiwan / 台灣)</option>
+        <option value="J">J (Japan / 日本)</option>
+        <option value="K">K (Korea / 韓國)</option>
+        <option value="C">C (China / 中國)</option>
+        <option value="E">E (Europe / 歐洲)</option>
+      </select>
+    </div>
+    <div><label data-i18n="lblSerial">單週流水號 (01–99)</label><input id="serial" type="number" value="1" min="1" max="99" oninput="calc()"></div>
+    <div><label data-i18n="lblQuoteNo">報價單號 (Quote #, 自動)</label><input id="quoteNo" type="text" value="" readonly></div>
+    <div><label data-i18n="lblLt">交期週數 (Lead time, Wks)</label><input id="ltWeeks" type="number" value="7" min="0" step="1" oninput="calc()"></div>
+    <div>
+      <label data-i18n="lblIncoterm">國貿條規 (Incoterm)</label>
+      <select id="incoterm" onchange="calc()">
+        <option value="EXW">EXW</option>
+        <option value="FOB">FOB</option>
+        <option value="CIF">CIF</option>
+        <option value="DDP" selected>DDP</option>
+      </select>
+    </div>
+    <div><label data-i18n="lblAddTariff">加徵進口關稅 (Add Tariff)</label>
+      <select id="addTariff" onchange="calc()">
+        <option value="no" selected data-i18n="optNo">No (不加計)</option>
+        <option value="yes" data-i18n="optYes">Yes (加計)</option>
+      </select>
+    </div>
+    <div><label data-i18n="lblTariff">關稅金額 (Tariff USD)</label><input id="tariff" class="money" type="text" inputmode="decimal" value="$0"></div>
+    <div><label data-i18n="lblVat">營業稅/消費稅 (VAT %)</label><input id="vatPct" type="number" value="10" step="0.1" oninput="calc()"></div>
+    <div><label data-i18n="lblFreight">國際快遞運費 (FedEx USD)</label><input id="freight" class="money" type="text" inputmode="decimal" value="$75"></div>
+    <div><label data-i18n="lblHs">海關稅號 (HS Code)</label><input id="hs" type="text" value="8105.20" oninput="calc()"></div>
+  </div>
+  <p class="hint" data-i18n="hintSec1">說明：報價單號規則為 C + 國別 + 年份後兩碼 + ISO週別 + 流水號 (如 CU263701)。有效期限預設 30 天。</p>
+</section>
+
+<!-- 區塊 2: 尺寸轉換與良率損耗換算 -->
+<section>
+  <h2 data-i18n="sec2Title">2. 尺寸轉換與損耗換算 (Dimensions &amp; Yield)</h2>
+  <div class="grid3">
+    <div><label data-i18n="lblLen">長度 (Length)</label><input id="len" type="number" value="70" oninput="calc()"></div>
+    <div><label data-i18n="lblWid">寬度 (Width)</label><input id="wid" type="number" value="70" oninput="calc()"></div>
+    <div><label data-i18n="lblThk">厚度 (Thickness)</label><input id="thk" type="number" value="0.4" step="0.01" oninput="calc()"></div>
+    <div>
+      <label data-i18n="lblUnit">尺寸單位 (Unit)</label>
+      <select id="unit" onchange="calc()">
+        <option value="mm" selected>mm</option>
+        <option value="cm">cm</option>
+        <option value="m">m</option>
+        <option value="in">inch</option>
+      </select>
+    </div>
+    <div><label data-i18n="lblPcs">需求片數 (Pcs, 輸入連動)</label><input id="pcs" type="number" value="25" oninput="fromPcs()"></div>
+    <div><label data-i18n="lblGoodM2">良品淨面積 (Good m², 倒推)</label><input id="goodM2" type="number" value="1" step="0.0001" oninput="fromGood()"></div>
+    <div><label data-i18n="lblYield">綜合良率 (Yield %)</label><input id="yieldPct" type="number" value="85" step="0.1" oninput="calc()"></div>
+  </div>
+  <div class="kpi">
+    <div><span data-i18n="kpiAreaPc">單片淨面積 (Area / pc)</span><b id="kAreaPc">—</b></div>
+    <div><span data-i18n="kpiStartM2">投料毛面積 (Started Area, 含損耗)</span><b id="kStartM2">—</b></div>
+  </div>
+  <p class="hint" id="moqHint"></p>
+</section>
+
+<!-- 區塊 3: 工廠與研發中心財務假設 -->
+<section>
+  <h2 data-i18n="sec3Title">3. 財務基準與樣品分流假設 (Financial Assumptions)</h2>
+  <div class="grid3">
+    <div>
+      <label data-i18n="lblAllocM2">年產能分攤基準 (m²/yr)</label>
+      <input id="allocM2" type="number" value="3000" oninput="calc()">
+    </div>
+    <div>
+      <label data-i18n="lblFactoryMark">工廠目標製造毛利 (Markup %)</label>
+      <input id="factoryMark" type="number" value="25" step="0.1" oninput="calc()">
+    </div>
+    <div>
+      <label data-i18n="lblListPx">市場目標單價比對 (USD/m²)</label>
+      <input id="listPx" class="money" type="text" inputmode="decimal" value="$500">
+    </div>
+    <div>
+      <label data-i18n="lblRent">全廠廠租＋間接人力 (USD/yr)</label>
+      <input id="rentYr" class="money" type="text" inputmode="decimal" value="$258,065">
+    </div>
+    <div>
+      <label data-i18n="lblEq">設備與公用折舊攤提 (USD/yr)</label>
+      <input id="eqYr" class="money" type="text" inputmode="decimal" value="$129,032">
+    </div>
+    <div>
+      <label data-i18n="lblUtil">共用公用動力水電 (USD/yr)</label>
+      <input id="utilYr" class="money" type="text" inputmode="decimal" value="$64,516">
+    </div>
+  </div>
+  <p class="hint" data-i18n="hintSec3">註：固定成本依「年基準產能」平均攤提至每平方米，避免小訂單攤提過度失真。</p>
+
+  <!-- Quote B 樣品雙軌選擇區塊 -->
+  <div class="sample-tier-box" id="sampleTierControls">
+    <label style="font-weight: 700; color: var(--orange); font-size: 12px; margin-bottom: 6px; display:block;" data-i18n="tierBoxTitle">
+      ★ Quote B 樣品計費策略模式 (Sample Tier Strategy)
+    </label>
+    <div class="grid3">
+      <div>
+        <label data-i18n="lblSampleTier">樣品類別 (Tier Selection)</label>
+        <select id="sampleTier" onchange="applySampleTier()">
+          <option value="standard" data-i18n="optStdSample">標準現品打樣 (Standard: 1.5x出廠價, $0 NRE, MOQ 20pcs)</option>
+          <option value="custom" selected data-i18n="optCustomSample">客製配方研發 (Custom: NRE $1,500~$3,000 + 15% RD)</option>
+        </select>
+      </div>
+      <div>
+        <label data-i18n="lblNreFee">一次性工程開機試製費 (NRE Fee USD)</label>
+        <input id="nreFee" class="money" type="text" inputmode="decimal" value="$1,500">
+      </div>
+      <div id="tierCustomFields">
+        <label data-i18n="lblRdPct">RD 研發售價分攤率 (RD % of Price)</label>
+        <input id="rdPct" type="number" value="15" min="0" max="90" step="0.5" oninput="calc()">
+      </div>
+      <div id="tierStandardFields" style="display:none;">
+        <label data-i18n="lblStdMultiplier">標準樣品加成倍率 (Multiplier vs Quote A)</label>
+        <input id="stdMultiplier" type="number" value="1.5" step="0.1" min="1.0" oninput="calc()">
+      </div>
+    </div>
+    <p class="hint" style="margin-top:6px; color:#92400e;" data-i18n="hintTier">
+      • <b>標準現品：</b>免收 NRE，以 1.5 倍出廠價覆蓋小量耗損，設 MOQ 20 pcs。<br>
+      • <b>客製研發：</b>需專用調機與專屬高溫曲線，強制收 NRE ($1,500~$3,000) 覆蓋工程工時與氣體能耗。
+    </p>
+  </div>
+</section>
+
+<!-- 區塊 4: 製程變動成本結構 -->
+<section class="wide">
+  <h2 data-i18n="sec4Title">4. 製程變動成本結構 (Variable Process Costs) — 含直接人工、水電能耗、耗材與刀具損耗</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="l" data-i18n="thProcess">製程站別 (Process Stage)</th>
+        <th data-i18n="thPrice">單價 (USD/m²)</th>
+        <th data-i18n="thBasis">計算基準 (Basis)</th>
+        <th data-i18n="thOrderArea">本單分攤面積 (m²)</th>
+        <th data-i18n="thOrderCost">本單變動總額 (USD)</th>
+        <th data-i18n="thGoodCost">出貨良品單位成本 (USD/good m²)</th>
+      </tr>
+    </thead>
+    <tbody id="varBody"></tbody>
+  </table>
+  <p class="hint" data-i18n="hintSec4">
+    說明：成形與高溫燒結前段損耗較大，預設為「投料毛面積 (Started area)」；後段精密加工與品檢則以合格之「良品淨面積 (Good area)」計費。
+  </p>
+</section>
+
+<!-- 區塊 5: Quote A 試算面板 -->
+<section>
+  <h2><span data-i18n="sec5Title">Quote A · 工廠獨立利潤中心</span><span class="tag" data-i18n="tagVolume">大貨量產商用</span></h2>
+  <table><tbody id="quoteA"></tbody></table>
+  <div class="kpi">
+    <div>
+      <span data-i18n="kpiPriceA">建議量產單價 (Quote A)</span>
+      <b class="em" id="aPrice">—</b>
+      <span id="aPricePc" style="display:block;margin-top:3px;color:#e85d04;font-weight:700;"></span>
+    </div>
+    <div><span data-i18n="kpiMarginA">本單工廠製造毛利總額 (Factory Margin)</span><b id="aGp">—</b></div>
+  </div>
+  <p class="hint" data-i18n="hintSec5">Quote A 僅覆蓋工廠製造成本＋廠務折舊攤提＋工廠製造毛利，不包含研發中心費用，適用於大貨量產。</p>
+</section>
+
+<!-- 區塊 6: Quote B 試算面板 -->
+<section>
+  <h2><span data-i18n="sec6Title">Quote B · 利潤中心 ＋ 研發費用中心</span><span class="tag" id="tagB">樣品開發軌道</span></h2>
+  <table><tbody id="quoteB"></tbody></table>
+  <div class="kpi">
+    <div>
+      <span data-i18n="kpiPriceB">樣品產品單價 (Ex-NRE)</span>
+      <b class="em" id="bPrice">—</b>
+      <span id="bPricePc" style="display:block;margin-top:3px;color:#e85d04;font-weight:700;"></span>
+    </div>
+    <div><span data-i18n="kpiDealB">樣品案總收費 (Package Total, 含NRE)</span><b class="em" id="bGp">—</b></div>
+  </div>
+  <p class="hint" data-i18n="hintSec6">客製樣品報價含一次性 NRE，能在小批量下實質回收開機成本，並可在後續商業談判中約定轉量產時折抵。</p>
+</section>
+
+<!-- 區塊 7: 綜合比對與決策建議 -->
+<section class="wide">
+  <h2 data-i18n="sec7Title">5. 決策指標比對與商業建議 (Comparison &amp; Advisory)</h2>
+  <div class="kpi" style="grid-template-columns:repeat(4,1fr)">
+    <div><span data-i18n="kpiCompA">Quote A 單價 (m² / pc)</span><b class="em" id="cA">—</b></div>
+    <div><span data-i18n="kpiCompB">Quote B 單價 (m² / pc)</span><b class="em" id="cB">—</b></div>
+    <div><span data-i18n="kpiCompDiff">樣品溢價差額 (B - A)</span><b id="cDiff">—</b></div>
+    <div><span data-i18n="kpiCompList">目標市價 ($500) 覆蓋檢核</span><b id="c500">—</b></div>
+  </div>
+  <p class="hint" id="advice"></p>
+</section>
+</main>
+
+<script src="jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+// 語言字典 (繁體中文 / 英文)
+const I18N = {
+  zh: {
+    appTitle: "雙軌報價系統 V0.4",
+    formulaTitle: "報價公式 (live)",
+    formulaHint: "左側是公式名稱，右側是分數或運算式，橘色是依目前輸入算出的值。COGS margin = 銷貨成本 ÷ 淨收入。",
+    headerDesc: "• <b>Quote A (工廠量產軌道)：</b>工廠利潤中心，反映製程變動成本 ＋ 設備年化攤提 ＋ 目標製造毛利。<br>• <b>Quote B (研發打樣軌道)：</b>分為「標準品打樣 (1.5x 單價，免 NRE，MOQ 20)」與「客製研發打樣 (NRE $1,500~$3,000 覆蓋調機 ＋ 15% RD 分攤)」。<br>• <b>Excel 匯出：</b>一律以 <b>pcs (片)</b> 為計價基準與單價呈現。",
+    btnReset: "重設預設值 (Reset)",
+    btnPrint: "列印 / PDF",
+    btnExport: "匯出 Excel 報價單 (.xlsx)",
+    flowTitle: "📌 報價公式與雙軌邏輯指引 (Pricing Logic Flowchart)",
+    flowSub: "點擊右側按鈕查看成本如何從原物料、四大製程堆疊至 Quote A（量產出廠價）與 Quote B（研發樣品價）",
+    btnExpand: "展開圖解",
+    btnCollapse: "收合圖解",
+    step1Title: "Step 1. 尺寸與損耗換算",
+    step1Desc: "• <b>單片淨面積</b> ＝ (長 × 寬) ÷ 10⁶ m²<br>• <b>良品淨面積</b> ＝ 單片面積 × 訂購片數 (pcs)<br>• <b>投料毛面積</b> ＝ 良品淨面積 ÷ 綜合良率 (%)<br><span style='color:#d97706; font-weight:600;'>↳ 材料與成形/燒結依投料面積計費</span>",
+    step2Title: "Step 2. 工廠製造總成本 (COGS)",
+    step2Desc: "• <b>變動成本</b> ＝ 原材料 + 成形 + 燒結 + 加工 + 品檢<br>• <b>固定攤提</b> ＝ (廠租 + 設備折舊 + 公用) ÷ 年基準產能<br>• <b>出廠總成本</b> ＝ 製程變動成本 ＋ 單位固定攤提<br><span style='color:#16a34a; font-weight:600;'>↳ 代表工廠純製造自負盈虧底線</span>",
+    step3Title: "Quote A (量產大貨商用)",
+    step3Desc: "• <b>單價公式</b> ＝ COGS × (1 ＋ 工廠目標毛利%)<br>• <b>計價單位</b> ＝ 以出貨 pcs 為核心基準報價<br>• <b>適用場景</b> ＝ 標準規格大貨批量訂單<br><span style='color:#15803d; font-weight:600;'>↳ 確保工廠作為利潤中心維持盈利</span>",
+    step4Title: "Quote B (研發樣品打樣)",
+    step4Desc: "• <b>標準現品</b> ＝ Quote A × 1.5 倍 (免收 NRE，MOQ 20)<br>• <b>客製研發</b> ＝ 單價含 15% RD + 一次性 NRE ($1,500+)<br>• <b>商業條款</b> ＝ 客製 NRE 註記大貨量產時折抵返還<br><span style='color:#b45309; font-weight:600;'>↳ 覆蓋調機損耗，避免工程師做白工</span>",
+    sec1Title: "1. 報價模式與客戶規格 (Quote Track & Admin)",
+    lblTrack: "發行報價軌道 (Issue as)",
+    optTrackA: "Quote A — 工廠利潤中心 (大貨量產)",
+    optTrackB: "Quote B — 研發費用中心 (樣品打樣)",
+    lblSku: "標準品規格快選 (Product SKU)",
+    optCustom: "Custom (自行輸入規格)",
+    lblProdName: "品名規格 (Product Name)",
+    lblCust: "客戶公司 (Customer)",
+    lblContact: "聯絡人 (Contact)",
+    lblEmail: "電子信箱 (Email)",
+    lblCountry: "國家碼 (Quote# 規則)",
+    lblSerial: "單週流水號 (01–99)",
+    lblQuoteNo: "報價單號 (Quote #, 自動)",
+    lblLt: "交期週數 (Lead time, Wks)",
+    lblIncoterm: "國貿條規 (Incoterm)",
+    lblAddTariff: "加徵進口關稅 (Add Tariff)",
+    optNo: "No (不加計)",
+    optYes: "Yes (加計)",
+    lblTariff: "關稅金額 (Tariff USD)",
+    lblVat: "營業稅/消費稅 (VAT %)",
+    lblFreight: "國際快遞運費 (FedEx USD)",
+    lblHs: "海關稅號 (HS Code)",
+    hintSec1: "說明：報價單號規則為 C + 國別 + 年份後兩碼 + ISO週別 + 流水號 (如 CU263701)。有效期限預設 30 天。",
+    sec2Title: "2. 尺寸轉換與損耗換算 (Dimensions & Yield)",
+    lblLen: "長度 (Length)",
+    lblWid: "寬度 (Width)",
+    lblThk: "厚度 (Thickness)",
+    lblUnit: "尺寸單位 (Unit)",
+    lblPcs: "需求片數 (Pcs, 輸入連動)",
+    lblGoodM2: "良品淨面積 (Good m², 倒推)",
+    lblYield: "綜合良率 (Yield %)",
+    kpiAreaPc: "單片淨面積 (Area / pc)",
+    kpiStartM2: "投料毛面積 (Started Area, 含損耗)",
+    sec3Title: "3. 財務基準與樣品分流假設 (Financial Assumptions)",
+    lblAllocM2: "年產能分攤基準 (m²/yr)",
+    lblFactoryMark: "工廠目標製造毛利 (Markup %)",
+    lblListPx: "市場目標單價比對 (USD/m²)",
+    lblRent: "全廠廠租＋間接人力 (USD/yr)",
+    lblEq: "設備與公用折舊攤提 (USD/yr)",
+    lblUtil: "共用公用動力水電 (USD/yr)",
+    hintSec3: "註：固定成本依「年基準產能」平均攤提至每平方米，避免小訂單攤提過度失真。",
+    tierBoxTitle: "★ Quote B 樣品計費策略模式 (Sample Tier Strategy)",
+    lblSampleTier: "樣品類別 (Tier Selection)",
+    optStdSample: "標準現品打樣 (Standard: 1.5x出廠價, $0 NRE, MOQ 20pcs)",
+    optCustomSample: "客製配方研發 (Custom: NRE $1,500~$3,000 + 15% RD)",
+    lblNreFee: "一次性工程開機試製費 (NRE Fee USD)",
+    lblRdPct: "RD 研發售價分攤率 (RD % of Price)",
+    lblStdMultiplier: "標準樣品加成倍率 (Multiplier vs Quote A)",
+    hintTier: "• <b>標準現品：</b>免收 NRE，以 1.5 倍出廠價覆蓋小量耗損，設 MOQ 20 pcs。<br>• <b>客製研發：</b>需專用調機與專屬高溫曲線，強制收 NRE ($1,500~$3,000) 覆蓋工程工時與氣體能耗。",
+    sec4Title: "4. 製程變動成本結構 (Variable Process Costs) — 含直接人工、水電能耗、耗材與刀具損耗",
+    thProcess: "製程站別 (Process Stage)",
+    thPrice: "單價 (USD/m²)",
+    thBasis: "計算基準 (Basis)",
+    thOrderArea: "本單分攤面積 (m²)",
+    thOrderCost: "本單變動總額 (USD)",
+    thGoodCost: "出貨良品單位成本 (USD/good m²)",
+    hintSec4: "說明：成形與高溫燒結前段損耗較大，預設為「投料毛面積 (Started area)」；後段精密加工與品檢則以合格之「良品淨面積 (Good area)」計費。",
+    sec5Title: "Quote A · 工廠獨立利潤中心",
+    tagVolume: "大貨量產商用",
+    kpiPriceA: "建議量產單價 (Quote A)",
+    kpiMarginA: "本單工廠製造毛利總額 (Factory Margin)",
+    hintSec5: "Quote A 僅覆蓋工廠製造成本＋廠務折舊攤提＋工廠製造毛利，不包含研發中心費用，適用於大貨量產。",
+    sec6Title: "Quote B · 利潤中心 ＋ 研發費用中心",
+    kpiPriceB: "樣品產品單價 (Ex-NRE)",
+    kpiDealB: "樣品案總收費 (Package Total, 含NRE)",
+    hintSec6: "客製樣品報價含一次性 NRE，能在小批量下實質回收開機成本，並可在後續商業談判中約定轉量產時折抵。",
+    sec7Title: "5. 決策指標比對與商業建議 (Comparison & Advisory)",
+    kpiCompA: "Quote A 單價 (m² / pc)",
+    kpiCompB: "Quote B 單價 (m² / pc)",
+    kpiCompDiff: "樣品溢價差額 (B - A)",
+    kpiCompList: "目標市價 ($500) 覆蓋檢核"
+  },
+  en: {
+    appTitle: "Two-Track Quote V0.4",
+    formulaTitle: "Pricing formulas (live)",
+    formulaHint: "Name on the left, fraction or expression on the right. Orange is the live result. COGS margin = Cost of Goods Sold ÷ Net Revenue.",
+    headerDesc: "• <b>Quote A (Factory Volume Track):</b> Factory profit center reflecting variable manufacturing costs + plant amortization + factory markup.<br>• <b>Quote B (Sample/R&D Track):</b> Supports 'Standard Sample (1.5x price, $0 NRE, MOQ 20)' and 'Custom R&D ($1,500~$3,000 NRE + 15% RD share)'.<br>• <b>Excel Export:</b> Strictly quotes on a <b>pcs (pieces)</b> basis for unit price and volume.",
+    btnReset: "Reset Defaults",
+    btnPrint: "Print / PDF",
+    btnExport: "Export Quote (.xlsx)",
+    flowTitle: "📌 Pricing Logic & Methodology Flowchart",
+    flowSub: "Click right button to view how raw materials and 4-stage processes build up to Quote A (Volume) and Quote B (Sample).",
+    btnExpand: "Expand Flowchart",
+    btnCollapse: "Collapse Flowchart",
+    step1Title: "Step 1. Dimensions & Yield Conversion",
+    step1Desc: "• <b>Area / pc</b> = (Length × Width) ÷ 10⁶ m²<br>• <b>Good Area</b> = Area / pc × Pieces (pcs)<br>• <b>Started Area</b> = Good Area ÷ Yield (%)<br><span style='color:#d97706; font-weight:600;'>↳ Raw materials, forming & sintering use Started Area</span>",
+    step2Title: "Step 2. Factory Full Cost (COGS)",
+    step2Desc: "• <b>Variable Cost</b> = Materials + Forming + Sintering + Machining + QC<br>• <b>Fixed Overhead</b> = (Rent + Depreciation + Utilities) ÷ Annual Base Volume<br>• <b>Full COGS</b> = Variable Cost + Unit Fixed Overhead<br><span style='color:#16a34a; font-weight:600;'>↳ Factory break-even manufacturing baseline</span>",
+    step3Title: "Quote A (Commercial Volume Ship)",
+    step3Desc: "• <b>Formula</b> = Full COGS × (1 + Factory Markup %)<br>• <b>Basis</b> = Quoted in USD per piece (pc)<br>• <b>Scope</b> = Standard mass-production purchase orders<br><span style='color:#15803d; font-weight:600;'>↳ Ensures factory operates as a profitable center</span>",
+    step4Title: "Quote B (R&D Sample & Validation)",
+    step4Desc: "• <b>Standard Sample</b> = Quote A × 1.5x ($0 NRE, MOQ 20 pcs)<br>• <b>Custom R&D</b> = Unit price + 15% RD share + One-time NRE ($1,500+)<br>• <b>Commercial Rebate</b> = NRE credited upon future volume order<br><span style='color:#b45309; font-weight:600;'>↳ Prevents unrecovered engineering & furnace costs</span>",
+    sec1Title: "1. Quote Track & Export Administration",
+    lblTrack: "Issue as",
+    optTrackA: "Quote A — Factory Profit Center (Volume Ship)",
+    optTrackB: "Quote B — R&D Cost Center (Sample Track)",
+    lblSku: "Product SKU Presets",
+    optCustom: "Custom Specification",
+    lblProdName: "Product Name / Spec",
+    lblCust: "Customer Company",
+    lblContact: "Contact Person",
+    lblEmail: "Email Address",
+    lblCountry: "Country Code (Quote #)",
+    lblSerial: "Weekly Serial (01–99)",
+    lblQuoteNo: "Quote # (Auto)",
+    lblLt: "Lead Time (Weeks)",
+    lblIncoterm: "Incoterm",
+    lblAddTariff: "Add Import Tariff in Total",
+    optNo: "No (Do not add)",
+    optYes: "Yes (Include)",
+    lblTariff: "Tariff USD",
+    lblVat: "VAT / GST %",
+    lblFreight: "Freight USD (FedEx)",
+    lblHs: "HS Code",
+    hintSec1: "Note: Quote # format = C + Country + Year (2 digits) + ISO Week + Serial (e.g. CU263701). Valid for 30 days.",
+    sec2Title: "2. Order Dimensions & Yield Conversion",
+    lblLen: "Length",
+    lblWid: "Width",
+    lblThk: "Thickness",
+    lblUnit: "Dimension Unit",
+    lblPcs: "Order Pieces (pcs)",
+    lblGoodM2: "Good Output Area (m²)",
+    lblYield: "Overall Yield %",
+    kpiAreaPc: "Area per piece",
+    kpiStartM2: "Started Area (incl. yield loss)",
+    sec3Title: "3. Factory & Financial Assumptions",
+    lblAllocM2: "Annual Allocation Base (m²/yr)",
+    lblFactoryMark: "Factory Markup % on Cost",
+    lblListPx: "Market Target Check (USD/m²)",
+    lblRent: "Plant Rent + Indirect Labor (USD/yr)",
+    lblEq: "Plant Equipment Depreciation (USD/yr)",
+    lblUtil: "Shared Utilities (USD/yr)",
+    hintSec3: "Note: Fixed overhead is amortized based on annual capacity base (e.g. 3,000 m²) to prevent small order skewing.",
+    tierBoxTitle: "★ Quote B Sample Tier Strategy",
+    lblSampleTier: "Sample Tier Selection",
+    optStdSample: "Standard Sample (1.5x price, $0 NRE, MOQ 20 pcs)",
+    optCustomSample: "Custom Formula R&D (NRE $1,500~$3,000 + 15% RD share)",
+    lblNreFee: "One-time Engineering NRE / Setup USD",
+    lblRdPct: "R&D Share % of Selling Price",
+    lblStdMultiplier: "Standard Price Multiplier (vs Quote A)",
+    hintTier: "• <b>Standard Sample:</b> No NRE, 1.5x price covers small batch packing/handling. MOQ 20 pcs enforced.<br>• <b>Custom R&D:</b> Requires custom tuning & furnace run. Charges NRE ($1,500+) to cover engineering and argon/H2 gas consumption.",
+    sec4Title: "4. Variable Process Cost Breakdown — Direct labor, energy, gas, tooling & consumables",
+    thProcess: "Process Stage",
+    thPrice: "Unit Cost (USD/m²)",
+    thBasis: "Calculation Basis",
+    thOrderArea: "Order Area Basis (m²)",
+    thOrderCost: "Order Variable Total (USD)",
+    thGoodCost: "USD / Good m² Shipped",
+    hintSec4: "Note: Front-end forming and sintering suffer shrinkage/yield loss (Started area); back-end machining & QC track Good area.",
+    sec5Title: "Quote A · Factory Profit Center",
+    tagVolume: "Commercial Volume",
+    kpiPriceA: "Suggested Unit Price A",
+    kpiMarginA: "Factory Margin on Order",
+    hintSec5: "Quote A covers factory variable cost + plant overhead amortization + factory markup. Excludes corporate R&D.",
+    sec6Title: "Quote B · Factory + R&D Cost Center",
+    kpiPriceB: "Sample Unit Price (Ex-NRE)",
+    kpiDealB: "Sample Deal Package (incl. NRE)",
+    hintSec6: "Custom sample includes one-time NRE to recover machine setup costs, which can be credited upon future mass production.",
+    sec7Title: "5. Decision Indicators & Commercial Advisory",
+    kpiCompA: "Quote A (m² / pc)",
+    kpiCompB: "Quote B (m² / pc)",
+    kpiCompDiff: "Sample Premium (B - A)",
+    kpiCompList: "Target Market Check ($500)"
+  }
+};
+
+let currentLang = localStorage.getItem("cellmo_quote_lang") || "zh";
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem("cellmo_quote_lang", lang);
+  document.documentElement.lang = lang === "zh" ? "zh-TW" : "en";
+  document.getElementById("btnLang").textContent = lang === "zh" ? "English" : "繁體中文";
+
+  const dict = I18N[lang];
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if (dict[key]) el.innerHTML = dict[key];
+  });
+
+  // 更新圖解展開按鈕文字
+  const box = document.getElementById("diagramBox");
+  const isHide = box.style.display === "none";
+  document.getElementById("btnDiag").textContent = isHide ? dict.btnExpand : dict.btnCollapse;
+
+  calc();
+}
+
+function toggleLang() {
+  setLang(currentLang === "zh" ? "en" : "zh");
+}
+
+// 內嵌 CellMo 正式報價單 Excel 模板 (Base64 格式)
+const TEMPLATE_XLSX_B64 = "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";
+
+const SKUS = {
+  nifeal_pte: { name: "Ni/FeAl PTE", len: 70, wid: 70, thk: 0.4, unit: "mm", pcs: 25 },
+  ni_foam: { name: "Ni foam", len: 200, wid: 200, thk: 1.6, unit: "mm", pcs: 25 },
+  ti_foam: { name: "Ti foam", len: 100, wid: 100, thk: 0.5, unit: "mm", pcs: 20 }
+};
+
+function applySku() {
+  const id = document.getElementById("sku").value;
+  if (id === "custom") return;
+  const s = SKUS[id];
+  if (!s) return;
+  document.getElementById("prodName").value = s.name;
+  document.getElementById("len").value = s.len;
+  document.getElementById("wid").value = s.wid;
+  document.getElementById("thk").value = s.thk;
+  document.getElementById("unit").value = s.unit;
+  document.getElementById("pcs").value = s.pcs;
+  lock = "pcs";
+  calc();
+}
+
+function toggleDiagram() {
+  const box = document.getElementById("diagramBox");
+  const btn = document.getElementById("btnDiag");
+  const isHide = box.style.display === "none";
+  box.style.display = isHide ? "block" : "none";
+  const dict = I18N[currentLang];
+  btn.textContent = isHide ? dict.btnCollapse : dict.btnExpand;
+}
+
+function toggleTrack() {
+  const tr = document.getElementById("track").value;
+  document.getElementById("sampleTierControls").style.display = (tr === "B") ? "block" : "none";
+  calc();
+}
+
+function applySampleTier() {
+  const tier = document.getElementById("sampleTier").value;
+  const nreEl = document.getElementById("nreFee");
+  if (tier === "standard") {
+    nreEl.value = "$0";
+    document.getElementById("tierStandardFields").style.display = "block";
+    document.getElementById("tierCustomFields").style.display = "none";
+  } else {
+    if (parseMoney(nreEl.value) === 0) nreEl.value = "$1,500";
+    document.getElementById("tierStandardFields").style.display = "none";
+    document.getElementById("tierCustomFields").style.display = "block";
+  }
+  calc();
+}
+
+function isoWeek(d) {
+  const dt = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = dt.getUTCDay() || 7;
+  dt.setUTCDate(dt.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(dt.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((dt - yearStart) / 86400000) + 1) / 7);
+  return { yy: String(dt.getUTCFullYear()).slice(-2), ww: String(week).padStart(2, "0"), year: dt.getUTCFullYear() };
+}
+
+function quoteNumber() {
+  const { yy, ww } = isoWeek(new Date());
+  const serial = String(Math.max(1, Math.min(99, n("serial") || 1))).padStart(2, "0");
+  return "C" + document.getElementById("ccode").value + yy + ww + serial;
+}
+
+function fmtDate(d) {
+  const mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return d.getFullYear() + "/" + mon[d.getMonth()] + "/" + String(d.getDate()).padStart(2, "0");
+}
+
+const VAR_DEFAULTS = [
+  { id: "mat", name_zh: "1. 原材料 (Direct Materials: 粉末/基材/溶劑)", name_en: "1. Raw Materials (Powder, mesh, binder)", usd: 180, base: "start" },
+  { id: "form", name_zh: "2. 成形製程 (Forming: 塗佈/壓延能耗與工時)", name_en: "2. Forming (Coating, rolling, labor & energy)", usd: 40, base: "start" },
+  { id: "sint", name_zh: "3. 燒結製程 (Sintering: 高溫爐電費/氣氛氣體/治具)", name_en: "3. Sintering (Furnace power, Ar/H2 gas, tooling)", usd: 45, base: "start" },
+  { id: "mach", name_zh: "4. 加工製程 (Machining: 精密分切/模具刀具磨損)", name_en: "4. Machining (Slitting, die cutting, tool wear)", usd: 25, base: "good" },
+  { id: "qc", name_zh: "5. 品檢製程 (QC: 氣密孔隙量測/包裝耗材)", name_en: "5. QC & Packing (Inspection, permeability, pack)", usd: 10, base: "good" },
+];
+
+function parseMoney(v) {
+  if (typeof v === "number") return v;
+  const s = String(v == null ? "" : v).replace(/[^0-9.-]/g, "");
+  const num = parseFloat(s);
+  return isNaN(num) ? 0 : num;
+}
+function n(id) {
+  const el = document.getElementById(id);
+  return el ? parseMoney(el.value) : 0;
+}
+function fmtMoney(x, d) {
+  const dec = d == null ? 0 : d;
+  const sign = x < 0 ? "-" : "";
+  return sign + "$" + Math.abs(x).toLocaleString("en-US", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function money(x) { return fmtMoney(x, 2); }
+function bindMoney(el, decimals) {
+  const d = decimals == null ? 0 : decimals;
+  el.addEventListener("blur", () => {
+    el.value = fmtMoney(parseMoney(el.value), d);
+    calc();
+  });
+  el.addEventListener("input", calc);
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { el.blur(); }
+  });
+}
+
+function toM(val, unit) {
+  if (unit === "mm") return val / 1000;
+  if (unit === "cm") return val / 100;
+  if (unit === "in") return val * 0.0254;
+  return val;
+}
+function areaPc() {
+  const u = document.getElementById("unit").value;
+  return toM(n("len"), u) * toM(n("wid"), u);
+}
+
+let lock = null;
+function fromPcs() { lock = "pcs"; calc(); }
+function fromGood() { lock = "good"; calc(); }
+
+function calc() {
+  const aPc = areaPc();
+  let pcs = n("pcs");
+  let good = n("goodM2");
+  const y = Math.max(n("yieldPct"), 0.01) / 100;
+
+  if (lock === "pcs") {
+    good = pcs * aPc;
+    document.getElementById("goodM2").value = good.toFixed(4);
+  } else if (lock === "good") {
+    pcs = aPc > 0 ? good / aPc : 0;
+    document.getElementById("pcs").value = pcs.toFixed(2);
+  } else {
+    good = pcs * aPc;
+    document.getElementById("goodM2").value = good.toFixed(4);
+  }
+
+  const start = good / y;
+  document.getElementById("kAreaPc").textContent = aPc.toFixed(6) + " m²";
+  document.getElementById("kStartM2").textContent = start.toFixed(4) + " m²";
+  const qn = document.getElementById("quoteNo");
+  if (qn) qn.value = quoteNumber();
+
+  // MOQ 檢核提示
+  const tier = document.getElementById("sampleTier").value;
+  const tr = document.getElementById("track").value;
+  const moqEl = document.getElementById("moqHint");
+  if (tr === "B" && tier === "standard" && pcs < 20) {
+    moqEl.innerHTML = currentLang === "zh"
+      ? `<span class="bad"><b>★ MOQ 提示：</b>標準現品打樣 (Standard Sample) 最低起訂量建議為 20 pcs (目前為 ${pcs} pcs)。</span>`
+      : `<span class="bad"><b>★ MOQ Notice:</b> Standard Sample tier recommends a minimum of 20 pcs (currently ${pcs} pcs).</span>`;
+  } else {
+    moqEl.innerHTML = currentLang === "zh"
+      ? `在 ${n("yieldPct")}% 良率下，每出貨 1 m² 良品需投料 ${(1/y).toFixed(3)} m² 毛料。材料與成形/燒結依投料面積計費，後段加工品檢依良品面積計費。`
+      : `At ${n("yieldPct")}% yield, ${(1/y).toFixed(3)} m² started area is required per 1 m² good output. Front-end uses started area; machining/QC uses good area.`;
+  }
+
+  const alloc = Math.max(n("allocM2"), 0.0001);
+  const rent = n("rentYr") / alloc;
+  const eq = n("eqYr") / alloc;
+  const util = n("utilYr") / alloc;
+  const factoryFixedPer = rent + eq + util;
+
+  const rows = VAR_DEFAULTS.map(v => {
+    const el = document.getElementById("u_" + v.id);
+    const baseEl = document.getElementById("b_" + v.id);
+    const usd = el ? parseMoney(el.value) : v.usd;
+    const base = baseEl ? baseEl.value : v.base;
+    const m2 = base === "start" ? start : good;
+    const line = usd * m2;
+    const perGood = good > 0 ? line / good : 0;
+    return { ...v, usd, base, m2, line, perGood };
+  });
+
+  const varPerGood = rows.reduce((s, r) => s + r.perGood, 0);
+  const factoryFull = varPerGood + factoryFixedPer;
+  
+  const mark = n("factoryMark") / 100;
+  const priceA_m2 = factoryFull * (1 + mark);
+  const gpA_per = priceA_m2 - factoryFull;
+  const gpA = gpA_per * good;
+
+  let priceB_m2 = 0;
+  let rdPer = 0;
+  let nre = parseMoney(document.getElementById("nreFee").value);
+  
+  if (tier === "standard") {
+    const stdMult = Math.max(n("stdMultiplier"), 1.0);
+    priceB_m2 = priceA_m2 * stdMult;
+    rdPer = priceB_m2 - priceA_m2;
+    nre = 0;
+  } else {
+    const rdPct = Math.max(n("rdPct"), 0) / 100;
+    const den = Math.max(1 - rdPct, 0.05);
+    priceB_m2 = priceA_m2 / den;
+    rdPer = priceB_m2 * rdPct;
+  }
+
+  const gpB = (priceB_m2 - factoryFull) * good;
+  const prodB = priceB_m2 * good;
+  const dealB = prodB + nre;
+  const rdRecoup = rdPer * good + nre;
+
+  renderVar(rows);
+  renderA({ varPerGood, rent, eq, util, factoryFull, priceA: priceA_m2, gpA, gpA_per, good });
+  renderB({ priceA: priceA_m2, rdPer, priceB: priceB_m2, gpB, good, nre, prodB, dealB, rdRecoup, tier });
+  updateFormulas({ factoryFull, priceA: priceA_m2, priceB: priceB_m2 });
+
+  document.getElementById("cA").innerHTML = money(priceA_m2) + " / m²<br>" + money(priceA_m2 * aPc) + " / pc";
+  document.getElementById("cB").innerHTML = money(priceB_m2) + " / m²<br>" + money(priceB_m2 * aPc) + " / pc";
+  document.getElementById("cDiff").innerHTML = money(priceB_m2 - priceA_m2) + " / m²<br>" + money((priceB_m2 - priceA_m2) * aPc) + " / pc";
+  
+  const list = n("listPx");
+  const cover = list - factoryFull;
+  const el500 = document.getElementById("c500");
+  if (currentLang === "zh") {
+    el500.textContent = cover >= 0 ? "達標 (剩餘利潤 " + money(cover) + ")" : "超標 (短缺 " + money(cover) + ")";
+  } else {
+    el500.textContent = cover >= 0 ? "Covers (margin " + money(cover) + ")" : "Short (" + money(cover) + ")";
+  }
+  el500.className = cover >= 0 ? "ok" : "bad";
+
+  // 動態業務指引
+  const adv = [];
+  if (currentLang === "zh") {
+    adv.push(`工廠出廠總成本 (COGS) 為 ${money(factoryFull)}/良品m² (變動成本 ${money(varPerGood)} + 固定攤提 ${money(factoryFixedPer)})。`);
+    adv.push(`【軌道 A 量產出廠價】：${money(priceA_m2)}/m² (${money(priceA_m2 * aPc)}/pc)。`);
+    if (tier === "standard") {
+      adv.push(`【軌道 B 標準現品打樣】：採 1.5 倍單價 (${money(priceB_m2)}/m²)，免收 NRE，請確認訂單滿足 MOQ 20 pcs。`);
+    } else {
+      adv.push(`【軌道 B 客製研發試製】：收取 NRE ${money(nre)} 覆蓋調機試爐成本，單價內含 15% RD 分攤 (${money(priceB_m2)}/m²)。`);
+      adv.push(`商業條款：此客製 NRE 載明於報價單，可作為後續客戶轉大貨量產時折抵返還之商業籌碼。`);
+    }
+  } else {
+    adv.push(`Factory full cost (COGS) is ${money(factoryFull)}/good m² (variable ${money(varPerGood)} + fixed allocation ${money(factoryFixedPer)}).`);
+    adv.push(`[Track A Volume Price]: ${money(priceA_m2)}/m² (${money(priceA_m2 * aPc)}/pc).`);
+    if (tier === "standard") {
+      adv.push(`[Track B Standard Sample]: 1.5x price multiplier (${money(priceB_m2)}/m²), $0 NRE. Ensure MOQ >= 20 pcs.`);
+    } else {
+      adv.push(`[Track B Custom R&D]: NRE ${money(nre)} covers tooling/furnace run. Unit price embeds 15% RD share (${money(priceB_m2)}/m²).`);
+      adv.push(`Commercial Term: NRE can be credited/rebated toward future mass production orders.`);
+    }
+  }
+  document.getElementById("advice").textContent = adv.join(" ");
+}
+
+function renderVar(rows) {
+  const active = document.activeElement;
+  const activeId = active && active.id;
+  const activeVal = activeId && document.getElementById(activeId) ? document.getElementById(activeId).value : null;
+  const activePos = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
+  
+  const optStart = currentLang === "zh" ? "投料毛面積 (Started)" : "Started Area";
+  const optGood = currentLang === "zh" ? "良品淨面積 (Good)" : "Good Area";
+  const totText = currentLang === "zh" ? "變動成本合計 (Total Variable / Good m²)" : "Total Variable Cost / Good m²";
+
+  document.getElementById("varBody").innerHTML = rows.map(r => `
+    <tr>
+      <td class="l">${currentLang === "zh" ? r.name_zh : r.name_en}</td>
+      <td><input id="u_${r.id}" class="money" type="text" inputmode="decimal" value="${activeId === "u_" + r.id && activeVal != null ? activeVal : fmtMoney(r.usd, 2)}"></td>
+      <td>
+        <select id="b_${r.id}" onchange="calc()">
+          <option value="start" ${r.base==="start"?"selected":""}>${optStart}</option>
+          <option value="good" ${r.base==="good"?"selected":""}>${optGood}</option>
+        </select>
+      </td>
+      <td class="num">${r.m2.toFixed(4)}</td>
+      <td class="num">${money(r.line)}</td>
+      <td class="num">${money(r.perGood)}</td>
+    </tr>`).join("") + `
+    <tr style="background:#fafafa; font-weight:700;">
+      <td class="l">${totText}</td>
+      <td></td><td></td><td></td><td></td>
+      <td class="num">${money(rows.reduce((s,r)=>s+r.perGood,0))}</td>
+    </tr>`;
+    
+  if (activeId && document.getElementById(activeId)) {
+    const el = document.getElementById(activeId);
+    el.focus();
+    if (activePos != null) {
+      try { el.setSelectionRange(activePos, activePos); } catch (e) {}
+    }
+  }
+}
+
+function row(l, v) { return `<tr><td class="l">${l}</td><td class="num">${v}</td></tr>`; }
+
+function renderA(x) {
+  const isZh = currentLang === "zh";
+  document.getElementById("quoteA").innerHTML =
+    row(isZh ? "製程變動成本小計 / 良品m²" : "Variable Cost / good m²", money(x.varPerGood)) +
+    row(isZh ? "廠租與間接人力分攤 / m²" : "Rent & Indirect Labor / m²", money(x.rent)) +
+    row(isZh ? "專用設備折舊分攤 / m²" : "Equipment Depreciation / m²", money(x.eq)) +
+    row(isZh ? "共用設施水電分攤 / m²" : "Shared Utilities / m²", money(x.util)) +
+    row(isZh ? "<b>工廠出廠總成本 (COGS) / m²</b>" : "<b>Factory Full Cost (COGS) / m²</b>", "<b>" + money(x.factoryFull) + "</b>") +
+    row(isZh ? `工廠製造利潤加成 (${n("factoryMark")}%)` : `Factory Markup (${n("factoryMark")}%)`, money(x.gpA_per)) +
+    row(isZh ? "<b>建議量產單價 (Quote A / m²)</b>" : "<b>Suggested Unit Price A / m²</b>", "<b>" + money(x.priceA) + " / m²</b>") +
+    row(isZh ? "<b>建議單片單價 (Quote A / pc)</b>" : "<b>Suggested Unit Price A / pc</b>", "<b>" + money(x.priceA * areaPc()) + " / pc</b>") +
+    row(isZh ? "本單良品出貨總面積" : "Good Area This Order", x.good.toFixed(4) + " m²") +
+    row(isZh ? "本單大貨總報價 (Order Total)" : "Order Total A", money(x.priceA * x.good)) +
+    row(isZh ? "本單工廠毛利貢獻 (Margin)" : "Factory Margin This Order", money(x.gpA));
+  document.getElementById("aPrice").textContent = money(x.priceA) + " / m²";
+  document.getElementById("aPricePc").textContent = money(x.priceA * areaPc()) + " / pc";
+  document.getElementById("aGp").textContent = money(x.gpA);
+}
+
+function renderB(x) {
+  const isZh = currentLang === "zh";
+  const tierName = x.tier === "standard" 
+    ? (isZh ? "標準現品打樣 (1.5x, $0 NRE)" : "Standard Sample (1.5x, $0 NRE)")
+    : (isZh ? "客製配方研發 (含 NRE 試製費)" : "Custom R&D (NRE + 15% RD)");
+  document.getElementById("tagB").textContent = x.tier === "standard" 
+    ? (isZh ? "標準現品" : "Standard Sample") 
+    : (isZh ? "客製研發" : "Custom R&D");
+
+  document.getElementById("quoteB").innerHTML =
+    row(isZh ? "樣品計費策略模式" : "Sample Tier Mode", `<b>${tierName}</b>`) +
+    row(isZh ? "工廠出廠基底價 (Quote A)" : "Base Factory Price A", money(x.priceA) + " / m²") +
+    row(x.tier === "standard" 
+        ? (isZh ? "樣品單價溢價倍率" : "Sample Price Multiplier") 
+        : (isZh ? "RD 研發售價分攤率" : "R&D Share % of Price"),
+        x.tier === "standard" ? (n("stdMultiplier") + "x") : (n("rdPct") + "%")) +
+    row(isZh ? "<b>樣品產品單價 (Quote B / m²)</b>" : "<b>Unit Price B (ex-NRE) / m²</b>", "<b>" + money(x.priceB) + " / m²</b>") +
+    row(isZh ? "<b>樣品單片單價 (Quote B / pc)</b>" : "<b>Unit Price B / pc</b>", "<b>" + money(x.priceB * areaPc()) + " / pc</b>") +
+    row(isZh ? "樣品產品總價 (Product Total)" : "Product Total B", money(x.prodB)) +
+    row(isZh ? "一次性工程開機費 (NRE Fee)" : "One-time Engineering NRE", money(x.nre)) +
+    row(isZh ? "<b>樣品案成交總額 (Deal Package)</b>" : "<b>Sample Deal Total</b>", "<b>" + money(x.dealB) + "</b>") +
+    row(isZh ? "本案研發費用中心回收額" : "R&D Recouped This Deal", money(x.rdRecoup)) +
+    row(isZh ? "工廠端於產品中結算之毛利" : "Factory Margin in Product", money(x.gpB));
+  document.getElementById("bPrice").textContent = money(x.priceB) + " / m²";
+  document.getElementById("bPricePc").textContent = money(x.priceB * areaPc()) + " / pc";
+  document.getElementById("bGp").textContent = money(x.dealB);
+}
+
+function xmlEsc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function replaceCell(xml, ref, body) {
+  const re = new RegExp('<c r="' + ref + '"[^>]*(?:/>|>[\\s\\S]*?</c>)');
+  if (!re.test(xml)) throw new Error("Template missing cell " + ref);
+  return xml.replace(re, body);
+}
+function textCell(xml, ref, style, value) {
+  const t = xmlEsc(value == null ? "" : value);
+  return replaceCell(xml, ref, '<c r="' + ref + '" s="' + style + '" t="inlineStr"><is><t xml:space="preserve">' + t + '</t></is></c>');
+}
+function numCell(xml, ref, style, value) {
+  return replaceCell(xml, ref, '<c r="' + ref + '" s="' + style + '" t="n"><v>' + value + '</v></c>');
+}
+
+
+function updateFormulas(x) {
+  const aPc = areaPc();
+  const set = (id, main, sub) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = main + (sub ? "<span>" + sub + "</span>" : "");
+  };
+  set("fv_piece", aPc.toFixed(6) + " m²", "L × W in metres");
+  const y = Math.max(n("yieldPct"), 0.01) / 100;
+  const good = Math.max(n("goodM2"), 0);
+  set("fv_start", (good / y).toFixed(4) + " m²", "good ÷ yield");
+  set("fv_cogs", money(x.factoryFull) + " / m²", "variable + fixed");
+  set("fv_a", money(x.priceA) + " / m²", money(x.priceA * aPc) + " / pc");
+  const std = x.priceA * Math.max(n("stdMultiplier"), 1);
+  set("fv_bstd", money(std) + " / m²", money(std * aPc) + " / pc");
+  const rd = Math.max(n("rdPct"), 0) / 100;
+  const custom = x.priceA / Math.max(1 - rd, 0.05);
+  set("fv_bcustom", money(custom) + " / m²", money(custom * aPc) + " / pc + NRE");
+  const track = document.getElementById("track").value;
+  const issued = track === "A" ? x.priceA : x.priceB;
+  const cogsM = issued > 0 ? (x.factoryFull / issued) * 100 : 0;
+  set("fv_cogsM", cogsM.toFixed(1) + "%", "COGS / net price");
+  const mk = n("factoryMark") / 100;
+  const gm = mk / (1 + mk) * 100;
+  set("fv_gm", gm.toFixed(1) + "%", n("factoryMark") + "% markup on cost");
+}
+
+function clearFieldErrors() {
+  document.querySelectorAll(".field-error").forEach(el => el.classList.remove("field-error"));
+  document.querySelectorAll(".field-error-label").forEach(el => el.classList.remove("field-error-label"));
+  const box = document.getElementById("exportErr");
+  if (box) { box.classList.remove("show"); box.innerHTML = ""; }
+}
+
+function markError(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add("field-error");
+  const lab = el.previousElementSibling;
+  if (lab && lab.tagName === "LABEL") lab.classList.add("field-error-label");
+}
+
+function isBlank(id) {
+  const el = document.getElementById(id);
+  if (!el) return true;
+  return String(el.value || "").trim() === "";
+}
+
+function validateForExport() {
+  clearFieldErrors();
+  const missing = [];
+  const zh = currentLang === "zh";
+  const req = [
+    ["custName", zh ? "客戶公司" : "Customer"],
+    ["custContact", zh ? "聯絡人" : "Contact"],
+    ["custEmail", zh ? "電子信箱" : "Email"],
+    ["prodName", zh ? "品名規格" : "Product name"],
+    ["len", zh ? "長度" : "Length"],
+    ["wid", zh ? "寬度" : "Width"],
+    ["thk", zh ? "厚度" : "Thickness"],
+    ["pcs", zh ? "需求片數" : "Pcs"],
+    ["ltWeeks", zh ? "交期週數" : "Lead time"],
+    ["hs", zh ? "海關稅號" : "HS code"],
+  ];
+  req.forEach(([id, label]) => {
+    if (isBlank(id)) { markError(id); missing.push(label); }
+  });
+  ["len", "wid", "thk", "pcs"].forEach(id => {
+    if (n(id) <= 0) {
+      markError(id);
+      if (!missing.includes(id)) {
+        missing.push(zh ? (id + " 必須大於 0") : (id + " must be > 0"));
+      }
+    }
+  });
+  const email = (document.getElementById("custEmail").value || "").trim();
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    markError("custEmail");
+    missing.push(zh ? "電子信箱格式不正確" : "Email format is invalid");
+  }
+  if (document.getElementById("addTariff").value === "yes" && isBlank("tariff")) {
+    markError("tariff");
+    missing.push(zh ? "關稅金額" : "Tariff amount");
+  }
+  const track = document.getElementById("track").value;
+  const tier = document.getElementById("sampleTier").value;
+  if (track === "B" && tier === "custom" && isBlank("nreFee")) {
+    markError("nreFee");
+    missing.push(zh ? "NRE 試製費" : "NRE fee");
+  }
+  if (missing.length) {
+    const box = document.getElementById("exportErr");
+    box.classList.add("show");
+    box.innerHTML = (zh
+      ? "<b>還有欄位未填，無法匯出。</b>請補齊紅框後再按 Export：<br>"
+      : "<b>Required fields are empty. Export is blocked.</b> Fill the red boxes:<br>")
+      + missing.map(m => "• " + m).join("<br>");
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
+  return true;
+}
+
+async function exportQuote() {
+  const btn = document.querySelector("button.primary");
+  const old = btn ? btn.textContent : "";
+  try {
+    if (!validateForExport()) return;
+    if (typeof JSZip === "undefined") {
+      alert(currentLang === "zh" ? "JSZip 未載入。請確認 jszip.min.js 與本頁同一資料夾，或允許連網。" : "JSZip not loaded. Keep jszip.min.js next to this page, or allow internet.");
+      return;
+    }
+    if (btn) btn.textContent = currentLang === "zh" ? "匯出中..." : "Exporting...";
+    calc();
+
+    const track = document.getElementById("track").value;
+    const tier = document.getElementById("sampleTier").value;
+    const aPc = areaPc();
+    const pcs = n("pcs");
+    const good = Math.max(n("goodM2"), 0);
+    const y = Math.max(n("yieldPct"), 0.01) / 100;
+    const start = good / y;
+    const alloc = Math.max(n("allocM2"), 0.0001);
+    const rent = n("rentYr") / alloc;
+    const eq = n("eqYr") / alloc;
+    const util = n("utilYr") / alloc;
+
+    let varPerGood = 0;
+    VAR_DEFAULTS.forEach(v => {
+      const el = document.getElementById("u_" + v.id);
+      const baseEl = document.getElementById("b_" + v.id);
+      const usd = el ? parseMoney(el.value) : v.usd;
+      const base = baseEl ? baseEl.value : v.base;
+      const m2 = base === "start" ? start : good;
+      varPerGood += good > 0 ? (usd * m2) / good : 0;
+    });
+
+    const factoryFull = varPerGood + rent + eq + util;
+    const priceA_m2 = factoryFull * (1 + n("factoryMark") / 100);
+
+    let unitM2 = priceA_m2;
+    let nre = 0;
+    if (track === "B") {
+      if (tier === "standard") {
+        unitM2 = priceA_m2 * Math.max(n("stdMultiplier"), 1.0);
+        nre = 0;
+      } else {
+        const rdPct = Math.max(n("rdPct"), 0) / 100;
+        unitM2 = priceA_m2 / Math.max(1 - rdPct, 0.05);
+        nre = Math.max(parseMoney(document.getElementById("nreFee").value), 0);
+      }
+    }
+
+    const rawUnitPc = unitM2 * aPc;
+    const unitPc = rawUnitPc < 10 ? Math.round(rawUnitPc * 10000) / 10000 : Math.round(rawUnitPc * 100) / 100;
+
+    const vatP = n("vatPct") / 100;
+    const freight = n("freight");
+    const tariff = document.getElementById("addTariff").value === "yes" ? n("tariff") : 0;
+    const today = new Date();
+    const until = new Date(today.getTime() + 30 * 86400000);
+    const u = document.getElementById("unit").value;
+    const dim = n("len") + " " + u + " x " + n("wid") + " " + u + " x " + n("thk") + " " + u;
+    const qn = quoteNumber();
+    const incoterm = document.getElementById("incoterm").value;
+    const hs = document.getElementById("hs").value;
+    const lt = n("ltWeeks");
+    const name = document.getElementById("prodName").value || "Custom product";
+    const cust = document.getElementById("custName").value || "";
+    const contact = document.getElementById("custContact").value || "";
+    const email = document.getElementById("custEmail").value || "";
+
+    const b64 = String(TEMPLATE_XLSX_B64).replace(/\s+/g, "");
+    const raw = atob(b64);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error("Template is not a valid xlsx (bad zip header).");
+
+    const zip = await JSZip.loadAsync(bytes);
+    let xml = await zip.file("xl/worksheets/sheet1.xml").async("string");
+
+    xml = textCell(xml, "I5", "6", fmtDate(today));
+    xml = textCell(xml, "I6", "8", qn);
+    xml = textCell(xml, "I7", "10", cust || document.getElementById("ccode").value);
+    xml = textCell(xml, "I8", "6", fmtDate(until));
+    xml = textCell(xml, "B11", "3", cust ? ("To: " + cust) : "To:");
+    xml = textCell(xml, "B12", "104", contact);
+    xml = textCell(xml, "B13", "36", email);
+
+    xml = textCell(xml, "B18", "62", "1-1");
+    const tierSuffix = (track === "B" && tier === "standard") ? " (Standard Sample)" : "";
+    xml = textCell(xml, "C18", "75", name + tierSuffix + ",");
+    xml = textCell(xml, "C19", "112", " " + dim + ` (${aPc.toFixed(4)} m²/pc)`);
+    xml = textCell(xml, "E18", "14", "pcs");
+    xml = numCell(xml, "F18", "108", unitPc);
+    xml = numCell(xml, "G18", "15", pcs);
+    xml = textCell(xml, "I18", "110", "LT: " + lt + " weeks");
+
+    if (nre > 0) {
+      xml = textCell(xml, "B20", "64", "1-2");
+      xml = textCell(xml, "C20", "112", "One-time R&D engineering & setup charge (rebate available upon volume order)");
+      xml = textCell(xml, "E20", "14", "batch");
+      xml = numCell(xml, "F20", "108", nre);
+      xml = numCell(xml, "G20", "15", 1);
+    }
+
+    xml = textCell(xml, "C37", "90", incoterm);
+    xml = textCell(xml, "C38", "40", "GST/VAT " + n("vatPct") + " %");
+    xml = textCell(xml, "C39", "2", "HS CODE: " + hs);
+    xml = textCell(xml, "C40", "40", "Shipping fee by FedEx: " + freight + " USD");
+    xml = numCell(xml, "I37", "141", vatP);
+    xml = numCell(xml, "I38", "70", tariff);
+    xml = numCell(xml, "I39", "142", freight);
+
+    zip.file("xl/worksheets/sheet1.xml", xml);
+    const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const fname = "Quotation_" + qn + ".xlsx";
+    if (window.__quoteFileUrl) URL.revokeObjectURL(window.__quoteFileUrl);
+    const url = URL.createObjectURL(blob);
+    window.__quoteFileUrl = url;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fname;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    let bar = document.getElementById("downloadBar");
+    if (!bar) {
+      bar = document.createElement("div");
+      bar.id = "downloadBar";
+      bar.style.cssText = "position:sticky;top:0;z-index:50;background:#14532d;color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px;";
+      document.body.insertBefore(bar, document.body.firstChild);
+    }
+    const zh = currentLang === "zh";
+    bar.innerHTML = "<b>" + (zh ? "報價單已產生：" : "Quote file ready: ") + fname + "</b>"
+      + "<a href=\"" + url + "\" download=\"" + fname + "\" style=\"background:#fff;color:#14532d;font-weight:800;padding:6px 12px;border-radius:4px;text-decoration:none;\">"
+      + (zh ? "點這裡下載 Excel" : "Download Excel") + "</a>"
+      + "<span style=\"opacity:.85\">" + (zh ? "若預覽窗沒跳出檔案，用這個綠色列下載。" : "If the preview blocked the save dialog, use this green bar.") + "</span>";
+    bar.style.display = "flex";
+    if (btn) btn.textContent = old || (zh ? "匯出 Excel 報價單 (.xlsx)" : "Export Quote (.xlsx)");
+  } catch (e) {
+    if (btn) btn.textContent = old || (currentLang === "zh" ? "匯出 Excel 報價單 (.xlsx)" : "Export Quote (.xlsx)");
+    alert((currentLang === "zh" ? "匯出失敗：" : "Export failed: ") + (e && e.message ? e.message : e));
+    throw e;
+  }
+}
+
+function resetDefaults() {
+  if (!confirm(currentLang === "zh" ? "確定要重設回系統預設值嗎？" : "Reset all to page defaults?")) return;
+  location.reload();
+}
+
+["listPx", "rentYr", "eqYr", "utilYr", "nreFee", "tariff", "freight"].forEach(id => {
+  const el = document.getElementById(id);
+  const decimals = (id === "listPx" || id === "nreFee" || id === "tariff" || id === "freight") ? 2 : 0;
+  bindMoney(el, decimals);
+  el.value = fmtMoney(parseMoney(el.value), decimals);
+});
+
+document.getElementById("varBody").addEventListener("input", (e) => {
+  if (e.target && e.target.classList.contains("money")) calc();
+});
+document.getElementById("varBody").addEventListener("blur", (e) => {
+  if (e.target && e.target.classList.contains("money")) {
+    e.target.value = fmtMoney(parseMoney(e.target.value), 2);
+    calc();
+  }
+}, true);
+
+// 頁面初始化
+setLang(currentLang);
+applySampleTier();
+calc();
+
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (!(t instanceof HTMLElement)) return;
+  if (t.classList.contains("field-error")) {
+    t.classList.remove("field-error");
+    const lab = t.previousElementSibling;
+    if (lab && lab.tagName === "LABEL") lab.classList.remove("field-error-label");
+  }
+  const box = document.getElementById("exportErr");
+  if (box && box.classList.contains("show") && !document.querySelector(".field-error")) {
+    box.classList.remove("show");
+    box.innerHTML = "";
+  }
+});
+</script>
+</body>
+</html>
