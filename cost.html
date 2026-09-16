@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CellMo Two-Track Quote — 成本與報價單檔</title>
+<style>
+  :root {
+    --bg: #fff8f3;
+    --panel: #ffffff;
+    --panel2: #fff1e6;
+    --line: #f0d4c0;
+    --text: #1c1917;
+    --muted: #6d4c3a;
+    --orange: #e85d04;
+    --orange2: #f48c06;
+    --green: #16a34a;
+    --red: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13.5px;
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 2px solid var(--orange);
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 { margin: 0; font-size: 20px; font-weight: 700; }
+  header h1 span { color: var(--orange); }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 12px; max-width: 880px; line-height: 1.45; }
+  .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  button {
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12.5px;
+  }
+  button.primary, button.on { background: var(--orange); border-color: var(--orange); color: #fff; }
+  button:hover { filter: brightness(0.96); }
+  .ticker {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+  }
+  .ticker b { color: var(--orange); }
+  .ticker span { color: var(--muted); }
+  main { padding: 16px 24px 48px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 1100px) { .grid2 { grid-template-columns: 1fr; } }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  section h2 { margin: 0 0 10px; font-size: 14px; color: var(--orange); font-weight: 700; }
+  .wide { grid-column: 1 / -1; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px 12px; }
+  label { display: block; color: var(--muted); font-size: 11px; font-weight: 600; margin-bottom: 3px; }
+  input, select {
+    width: 100%;
+    background: #fff;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  input:focus, select:focus { outline: 2px solid var(--orange2); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { border-bottom: 1px solid var(--line); padding: 6px; text-align: right; }
+  th { color: var(--muted); font-weight: 700; font-size: 11px; background: #fffaf6; }
+  td.l, th.l { text-align: left; }
+  .num { font-variant-numeric: tabular-nums; }
+  .hint { color: var(--muted); font-size: 11.5px; line-height: 1.45; margin: 8px 0 0; }
+  .kpi { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 8px; }
+  .kpi div { background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+  .kpi span { display: block; color: var(--muted); font-size: 11px; }
+  .kpi b { display: block; font-size: 17px; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .kpi b.em { color: var(--orange); }
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--orange);
+    color: var(--orange);
+    margin-left: 6px;
+    font-weight: 700;
+  }
+  .ok { color: var(--green); }
+  .bad { color: var(--red); }
+  .sample-tier-box {
+    background: #fff8f1;
+    border: 1px dashed var(--orange2);
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+  #exportErr {
+    display: none;
+    margin: 12px 24px 0;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  #exportErr.show { display: block; }
+  .hidden { display: none !important; }
+  .guide { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .guide div { border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+  .guide b { color: var(--orange); }
+  @media print {
+    button { display: none; }
+    body { background: white; }
+    section { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>CellMo <span>Two-Track Quote</span></h1>
+    <p>
+      這是唯一主檔。雙擊用瀏覽器開啟即可，不需安裝。成本頁是工廠底線；報價頁用 V0.4 雙軌公式出客戶單。跟隨成本時，製程 USD/m² 由工廠年費拆開，良率不會算兩次。匯出給客戶的檔沒有內部成本。
+    </p>
+  </div>
+  <div class="actions">
+    <button id="btnQuote" class="on" onclick="setTab('quote')">報價</button>
+    <button id="btnCost" onclick="setTab('cost')">成本</button>
+    <button onclick="resetAll()">重設預設值</button>
+    <button onclick="window.print()">列印 / PDF</button>
+    <button class="primary" onclick="exportQuote()">匯出客戶報價單 (.xls)</button>
+  </div>
+</header>
+<div class="ticker" id="ticker"></div>
+<div id="exportErr"></div>
+<main>
+<div id="tabCost" class="hidden">
+  <div class="grid2">
+    <section>
+      <h2>產品與燒結瓶頸</h2>
+      <div class="grid3">
+        <div><label>品名</label><input id="c_productName" type="text" oninput="recalc()"></div>
+        <div><label>成品長 mm</label><input id="c_finishedLmm" type="number" oninput="recalc()"></div>
+        <div><label>成品寬 mm</label><input id="c_finishedWmm" type="number" oninput="recalc()"></div>
+        <div><label>成品厚 mm</label><input id="c_finishedTmm" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>平面收縮率</label><input id="c_shrink" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>濕膜厚 mm</label><input id="c_wetTmm" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>石墨板長 mm</label><input id="c_plateLmm" type="number" oninput="recalc()"></div>
+        <div><label>石墨板寬 mm</label><input id="c_plateWmm" type="number" oninput="recalc()"></div>
+        <div><label>一板片數</label><input id="c_pcsPerPlate" type="number" oninput="recalc()"></div>
+        <div><label>一爐板數</label><input id="c_platesPerBatch" type="number" oninput="recalc()"></div>
+        <div><label>週爐次</label><input id="c_batchesPerWeek" type="number" oninput="recalc()"></div>
+        <div><label>每月週數</label><input id="c_weeksPerMonth" type="number" oninput="recalc()"></div>
+        <div><label>年月份</label><input id="c_monthsPerYear" type="number" oninput="recalc()"></div>
+        <div><label>燒結良率</label><input id="c_sinterYield" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>塗佈良率</label><input id="c_coatingYield" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>混漿良率</label><input id="c_mixYield" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>漿料比重</label><input id="c_slurryDensity" type="number" step="0.01" oninput="recalc()"></div>
+      </div>
+    </section>
+    <section>
+      <h2>工廠成本結果</h2>
+      <div class="kpi">
+        <div><span>單片成本</span><b class="em" id="k_ntdPc">—</b></div>
+        <div><span>USD / m² 工廠</span><b class="em" id="k_usdM2">—</b></div>
+        <div><span>原表口徑 NTD/片</span><b id="k_sheet">—</b></div>
+        <div><span>年成品</span><b id="k_pcs">—</b></div>
+      </div>
+      <p class="hint" id="k_note"></p>
+      <h2 style="margin-top:16px;">成本結構</h2>
+      <table><tbody id="costLines"></tbody></table>
+    </section>
+    <section class="wide">
+      <h2>配方（克數只決定占比）</h2>
+      <table>
+        <thead><tr><th class="l">原料</th><th>g</th><th>NTD/kg</th><th>kg/年</th><th>NTD/年</th></tr></thead>
+        <tbody id="recipeBody"></tbody>
+      </table>
+      <p class="hint">粉價改 10%，總成本會明顯動。配方基準約 363 g，不是每次混漿的實際投料。</p>
+    </section>
+    <section>
+      <h2>塗佈／能源／氣體</h2>
+      <div class="grid3">
+        <div><label>並排片數</label><input id="c_webUp" type="number" oninput="recalc()"></div>
+        <div><label>廢邊 mm</label><input id="c_edgeMm" type="number" oninput="recalc()"></div>
+        <div><label>漿料含廢邊</label>
+          <select id="c_includeEdgeSlurry" onchange="recalc()"><option value="0">否（原表）</option><option value="1">是</option></select>
+        </div>
+        <div><label>PET NTD/m²</label><input id="c_petNtdPerM2" type="number" step="0.1" oninput="recalc()"></div>
+        <div><label>電價 NTD/kWh</label><input id="c_elecNtdPerKwh" type="number" step="0.1" oninput="recalc()"></div>
+        <div><label>產線月薪</label><input id="c_opSalaryMonthly" type="number" oninput="recalc()"></div>
+        <div><label>月工時 hr</label><input id="c_hoursPerMonth" type="number" oninput="recalc()"></div>
+        <div><label>攪拌桶 L</label><input id="c_mixerL" type="number" oninput="recalc()"></div>
+        <div><label>混漿製程 hr</label><input id="c_mixHrProcess" type="number" oninput="recalc()"></div>
+        <div><label>混漿人工 hr</label><input id="c_mixHrLabor" type="number" oninput="recalc()"></div>
+        <div><label>攪拌 kW</label><input id="c_mixerKw" type="number" step="0.1" oninput="recalc()"></div>
+        <div><label>混漿人數</label><input id="c_mixOp" type="number" oninput="recalc()"></div>
+        <div><label>塗佈 m/min</label><input id="c_coaterMPerMin" type="number" step="0.1" oninput="recalc()"></div>
+        <div><label>塗佈 kW</label><input id="c_coaterKw" type="number" oninput="recalc()"></div>
+        <div><label>塗佈人數</label><input id="c_coatOp" type="number" oninput="recalc()"></div>
+        <div><label>燒結 kWh/爐</label><input id="c_kwhPerSinterBatch" type="number" oninput="recalc()"></div>
+        <div><label>計入 N2/H2</label>
+          <select id="c_includeProcessGas" onchange="recalc()"><option value="0">否</option><option value="1">是</option></select>
+        </div>
+        <div><label>氬氣 set/爐</label><input id="c_arSets" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>氬氣單價</label><input id="c_arCostPerSet" type="number" oninput="recalc()"></div>
+        <div><label>燒結人數</label><input id="c_sinterOp" type="number" oninput="recalc()"></div>
+        <div><label>燒結人工 hr</label><input id="c_sinterHrLabor" type="number" oninput="recalc()"></div>
+        <div><label>加工 pcs/min</label><input id="c_machinePcsPerMin" type="number" oninput="recalc()"></div>
+        <div><label>加工 NTD/hr</label><input id="c_machineNtdPerHr" type="number" oninput="recalc()"></div>
+      </div>
+    </section>
+    <section>
+      <h2>QC／攤提／廠務</h2>
+      <div class="grid3">
+        <div><label>QC 每週期片數</label><input id="c_qcPcsPerCycle" type="number" oninput="recalc()"></div>
+        <div><label>QC 工作日</label><input id="c_qcWorkingDays" type="number" oninput="recalc()"></div>
+        <div><label>QC 人數</label><input id="c_qcPersons" type="number" oninput="recalc()"></div>
+        <div><label>QC 時薪</label><input id="c_qcNtdPerHr" type="number" oninput="recalc()"></div>
+        <div><label>QC 每日 hr</label><input id="c_qcHoursPerDay" type="number" oninput="recalc()"></div>
+        <div><label>設備購置 NTD</label><input id="c_capexNtd" type="number" oninput="recalc()"></div>
+        <div><label>攤提年數</label><input id="c_amortYears" type="number" oninput="recalc()"></div>
+        <div><label>年維護占購置</label><input id="c_maintPctOfCapex" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>租金／月</label><input id="c_rentMonthly" type="number" oninput="recalc()"></div>
+        <div><label>廠務分攤係數</label><input id="c_plantShare" type="number" oninput="recalc()"></div>
+        <div><label>RD1 月薪</label><input id="c_rd1Monthly" type="number" oninput="recalc()"></div>
+        <div><label>其他薪資除數</label><input id="c_othersDivisor" type="number" oninput="recalc()"></div>
+        <div><label>維護人力／月</label><input id="c_extraMaintStaffMonthly" type="number" oninput="recalc()"></div>
+        <div><label>間接 buffer</label><input id="c_indirectBuffer" type="number" step="0.01" oninput="recalc()"></div>
+        <div><label>USD per NTD</label><input id="c_usdPerNtd" type="number" step="0.001" oninput="recalc()"></div>
+      </div>
+      <p class="hint">其他薪資（不含 RD2）預設五筆，合計後除以 2。分攤係數 7 = 這張產品佔廠 1/7。</p>
+      <div class="grid3" style="margin-top:8px;">
+        <div><label>其他 1</label><input id="c_o1" type="number" oninput="recalc()"></div>
+        <div><label>其他 2</label><input id="c_o2" type="number" oninput="recalc()"></div>
+        <div><label>其他 3</label><input id="c_o3" type="number" oninput="recalc()"></div>
+        <div><label>其他 4</label><input id="c_o4" type="number" oninput="recalc()"></div>
+        <div><label>其他 5</label><input id="c_o5" type="number" oninput="recalc()"></div>
+      </div>
+    </section>
+    <section class="wide">
+      <h2>四站製造（年 NTD）</h2>
+      <table>
+        <thead><tr><th class="l">站</th><th>材料</th><th>能源／加工</th><th>人工</th></tr></thead>
+        <tbody id="stationBody"></tbody>
+      </table>
+    </section>
+  </div>
+</div>
+
+<div id="tabQuote">
+  <div class="grid2">
+    <section class="wide" style="border-left:4px solid var(--orange);">
+      <h2>雙軌報價指引 V0.4</h2>
+      <div class="guide">
+        <div><b>1. 尺寸與損耗</b><p class="hint">單片面積 × 片數 = 良品 m²。投料 = 良品 ÷ 良率。材料／成形／燒結按投料計。</p></div>
+        <div><b>2. 工廠 COGS</b><p class="hint">五站變動 ＋ 廠租設備年費 ÷ 年產能。這是出廠底線，不是售價。</p></div>
+        <div><b>Quote A 量產</b><p class="hint">COGS × (1＋markup%)。25% markup = 20% 毛利率。不加 NRE。</p></div>
+        <div><b>Quote B 打樣</b><p class="hint">標準 = A × 1.5，免 NRE，MOQ 20。客製 = A ÷ (1−RD%) ＋ NRE，量大可折抵。</p></div>
+      </div>
+    </section>
+    <section class="wide">
+      <label style="display:flex;align-items:center;gap:8px;font-weight:700;color:var(--orange);">
+        <input id="q_linked" type="checkbox" checked onchange="onLinkToggle()" style="width:auto;">
+        跟隨成本估算
+      </label>
+      <p class="hint" id="linkHint"></p>
+    </section>
+    <section>
+      <h2>1. 報價模式與客戶</h2>
+      <div class="grid3">
+        <div><label>發行軌道</label>
+          <select id="q_track" onchange="recalc()">
+            <option value="A">Quote A — 工廠量產</option>
+            <option value="B" selected>Quote B — 研發打樣</option>
+          </select>
+        </div>
+        <div><label>品名</label><input id="q_prodName" type="text" oninput="recalc()"></div>
+        <div><label>客戶公司</label><input id="q_custName" type="text" oninput="recalc()"></div>
+        <div><label>聯絡人</label><input id="q_custContact" type="text" oninput="recalc()"></div>
+        <div><label>電子信箱</label><input id="q_custEmail" type="text" oninput="recalc()"></div>
+        <div><label>國家碼</label>
+          <select id="q_ccode" onchange="recalc()">
+            <option value="U">U Australia</option>
+            <option value="S">S USA</option>
+            <option value="T">T Taiwan</option>
+            <option value="J" selected>J Japan</option>
+            <option value="K">K Korea</option>
+            <option value="C">C China</option>
+            <option value="E">E Europe</option>
+          </select>
+        </div>
+        <div><label>流水號</label><input id="q_serial" type="number" value="1" min="1" max="99" oninput="recalc()"></div>
+        <div><label>報價單號</label><input id="q_quoteNo" type="text" readonly></div>
+        <div><label>交期週數</label><input id="q_ltWeeks" type="number" value="7" oninput="recalc()"></div>
+        <div><label>Incoterm</label>
+          <select id="q_incoterm" onchange="recalc()">
+            <option>EXW</option><option>FOB</option><option>CIF</option><option selected>DDP</option>
+          </select>
+        </div>
+        <div><label>加計關稅</label>
+          <select id="q_addTariff" onchange="recalc()"><option value="0" selected>No</option><option value="1">Yes</option></select>
+        </div>
+        <div><label>關稅 USD</label><input id="q_tariffUsd" type="number" value="0" oninput="recalc()"></div>
+        <div><label>VAT %</label><input id="q_vatPct" type="number" value="10" step="0.1" oninput="recalc()"></div>
+        <div><label>FedEx USD</label><input id="q_freightUsd" type="number" value="75" oninput="recalc()"></div>
+        <div><label>HS Code</label><input id="q_hs" type="text" value="8105.20" oninput="recalc()"></div>
+      </div>
+    </section>
+    <section>
+      <h2>2. 尺寸與良率</h2>
+      <div class="grid3">
+        <div><label>長</label><input id="q_len" type="number" oninput="editQuoteDim()"></div>
+        <div><label>寬</label><input id="q_wid" type="number" oninput="editQuoteDim()"></div>
+        <div><label>厚</label><input id="q_thk" type="number" step="0.01" oninput="editQuoteDim()"></div>
+        <div><label>單位</label>
+          <select id="q_unit" onchange="editQuoteDim()">
+            <option value="mm" selected>mm</option><option value="cm">cm</option><option value="m">m</option><option value="in">inch</option>
+          </select>
+        </div>
+        <div><label>本單片數</label><input id="q_pcs" type="number" value="25" oninput="recalc()"></div>
+        <div><label>綜合良率 %</label><input id="q_yieldPct" type="number" step="0.1" oninput="editQuoteDim()"></div>
+      </div>
+      <div class="kpi">
+        <div><span>單片面積</span><b id="q_areaPc">—</b></div>
+        <div><span>投料面積</span><b id="q_startM2">—</b></div>
+      </div>
+      <p class="hint" id="moqHint"></p>
+    </section>
+    <section>
+      <h2>3. 財務假設</h2>
+      <div class="grid3">
+        <div><label>年產能分攤 m²</label><input id="q_allocM2" type="number" oninput="editQuoteFin()"></div>
+        <div><label>工廠 markup %</label><input id="q_factoryMark" type="number" value="25" step="0.1" oninput="recalc()"></div>
+        <div><label>目標市價 USD/m²</label><input id="q_listPx" type="number" value="500" oninput="recalc()"></div>
+        <div><label>廠租＋後勤 USD/年</label><input id="q_rentYr" type="number" oninput="editQuoteFin()"></div>
+        <div><label>設備攤提＋維護 USD/年</label><input id="q_eqYr" type="number" oninput="editQuoteFin()"></div>
+        <div><label>公用 USD/年</label><input id="q_utilYr" type="number" oninput="editQuoteFin()"></div>
+      </div>
+      <div class="sample-tier-box" id="tierBox">
+        <label style="color:var(--orange);font-weight:700;margin-bottom:6px;">Quote B 樣品策略</label>
+        <div class="grid3">
+          <div><label>樣品類別</label>
+            <select id="q_sampleTier" onchange="recalc()">
+              <option value="standard">標準現品 1.5× 免 NRE MOQ 20</option>
+              <option value="custom" selected>客製研發 NRE＋RD</option>
+            </select>
+          </div>
+          <div><label>NRE USD</label><input id="q_nreFee" type="number" value="1500" oninput="recalc()"></div>
+          <div><label>RD % of price</label><input id="q_rdPct" type="number" value="15" oninput="recalc()"></div>
+          <div><label>標準倍率 vs A</label><input id="q_stdMultiplier" type="number" value="1.5" step="0.1" oninput="recalc()"></div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Quote A · 量產<span class="tag">大貨</span></h2>
+      <table><tbody id="quoteA"></tbody></table>
+      <div class="kpi">
+        <div><span>Quote A</span><b class="em" id="aPrice">—</b></div>
+        <div><span>工廠毛利</span><b id="aGp">—</b></div>
+      </div>
+    </section>
+    <section>
+      <h2>Quote B · 打樣<span class="tag" id="tagB">客製</span></h2>
+      <table><tbody id="quoteB"></tbody></table>
+      <div class="kpi">
+        <div><span>單價 ex-NRE</span><b class="em" id="bPrice">—</b></div>
+        <div><span>案總額含 NRE</span><b class="em" id="bDeal">—</b></div>
+      </div>
+    </section>
+    <section class="wide">
+      <h2>4. 製程變動成本</h2>
+      <table>
+        <thead><tr><th class="l">站</th><th>USD/m²</th><th>基準</th><th>本單面積</th><th>本單金額</th><th>/ good m²</th></tr></thead>
+        <tbody id="varBody"></tbody>
+      </table>
+      <p class="hint">改單價會關掉跟隨成本。要接回工廠數字，再勾上面的開關。</p>
+    </section>
+    <section class="wide">
+      <h2>5. 比對</h2>
+      <div class="kpi" style="grid-template-columns:repeat(4,1fr)">
+        <div><span>Quote A / m²</span><b class="em" id="cA">—</b></div>
+        <div><span>Quote B / m²</span><b class="em" id="cB">—</b></div>
+        <div><span>B − A</span><b id="cDiff">—</b></div>
+        <div><span>$500 覆蓋</span><b id="c500">—</b></div>
+      </div>
+      <p class="hint" id="advice"></p>
+    </section>
+  </div>
+</div>
+</main>
+<script>
+function safeDiv(a,b){ if(!isFinite(a)||!isFinite(b)||b===0) return 0; return a/b; }
+function n(id){ const el=document.getElementById(id); return el ? parseFloat(String(el.value).replace(/[^0-9.-]/g,""))||0 : 0; }
+function txt(id){ const el=document.getElementById(id); return el ? String(el.value) : ""; }
+function setv(id,v){ const el=document.getElementById(id); if(el) el.value=v; }
+function money(x,d){ d=d==null?2:d; const s=x<0?"-":""; return s+"$"+Math.abs(x).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmt(x,d){ return (Number(x)||0).toLocaleString("zh-TW",{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+const RECIPE_DEFAULT = [
+  {name:"台灣電能粉", g:120, p:485},
+  {name:"圓融 316 粉", g:120, p:1000},
+  {name:"PVA 8.1", g:9.234, p:1200},
+  {name:"H2O", g:104.766, p:0},
+  {name:"2018", g:0.3045, p:860},
+  {name:"014", g:0.24325, p:460},
+  {name:"AMP", g:0.75, p:446},
+  {name:"8421", g:7.5, p:560}
+];
+
+function readRecipe(){
+  const rows=[];
+  for(let i=0;i<8;i++){
+    rows.push({name:txt("r_n"+i), grams:n("r_g"+i), price:n("r_p"+i)});
+  }
+  return rows;
+}
+
+function costInputs(){
+  return {
+    productName: txt("c_productName"),
+    finishedLmm:n("c_finishedLmm"), finishedWmm:n("c_finishedWmm"), finishedTmm:n("c_finishedTmm"),
+    shrink:n("c_shrink"), wetTmm:n("c_wetTmm"),
+    plateLmm:n("c_plateLmm"), plateWmm:n("c_plateWmm"),
+    pcsPerPlate:n("c_pcsPerPlate"), platesPerBatch:n("c_platesPerBatch"),
+    batchesPerWeek:n("c_batchesPerWeek"), weeksPerMonth:n("c_weeksPerMonth"), monthsPerYear:n("c_monthsPerYear"),
+    sinterYield:n("c_sinterYield"), coatingYield:n("c_coatingYield"), mixYield:n("c_mixYield"),
+    slurryDensity:n("c_slurryDensity"),
+    recipe: readRecipe(),
+    webUp:n("c_webUp"), edgeMm:n("c_edgeMm"),
+    includeEdgeSlurry: document.getElementById("c_includeEdgeSlurry").value==="1",
+    petNtdPerM2:n("c_petNtdPerM2"),
+    elecNtdPerKwh:n("c_elecNtdPerKwh"), opSalaryMonthly:n("c_opSalaryMonthly"), hoursPerMonth:n("c_hoursPerMonth"),
+    mixerL:n("c_mixerL"), mixHrProcess:n("c_mixHrProcess"), mixHrLabor:n("c_mixHrLabor"), mixerKw:n("c_mixerKw"), mixOp:n("c_mixOp"),
+    coaterMPerMin:n("c_coaterMPerMin"), coaterKw:n("c_coaterKw"), coatOp:n("c_coatOp"),
+    kwhPerSinterBatch:n("c_kwhPerSinterBatch"),
+    includeProcessGas: document.getElementById("c_includeProcessGas").value==="1",
+    n2Sets:2, n2CostPerSet:1080, h2Sets:1.5, h2CostPerSet:700,
+    arSets:n("c_arSets"), arCostPerSet:n("c_arCostPerSet"), sinterOp:n("c_sinterOp"), sinterHrLabor:n("c_sinterHrLabor"),
+    machinePcsPerMin:n("c_machinePcsPerMin"), machineNtdPerHr:n("c_machineNtdPerHr"),
+    qcPcsPerCycle:n("c_qcPcsPerCycle"), qcWorkingDays:n("c_qcWorkingDays"), qcPersons:n("c_qcPersons"),
+    qcNtdPerHr:n("c_qcNtdPerHr"), qcHoursPerDay:n("c_qcHoursPerDay"),
+    capexNtd:n("c_capexNtd"), amortYears:n("c_amortYears"), maintPctOfCapex:n("c_maintPctOfCapex"),
+    rentMonthly:n("c_rentMonthly"), plantShare:n("c_plantShare"), rd1Monthly:n("c_rd1Monthly"),
+    otherSalaries:[n("c_o1"),n("c_o2"),n("c_o3"),n("c_o4"),n("c_o5")],
+    othersDivisor:n("c_othersDivisor"), extraMaintStaffMonthly:n("c_extraMaintStaffMonthly"),
+    indirectBuffer:n("c_indirectBuffer"), usdPerNtd:n("c_usdPerNtd")
+  };
+}
+
+function computeCost(i){
+  const shrinkDen=1-i.shrink;
+  const greenLmm=safeDiv(i.finishedLmm,shrinkDen);
+  const greenWmm=safeDiv(i.finishedWmm,shrinkDen);
+  const greenTmm=i.wetTmm;
+  const pieceAreaM2=(i.finishedLmm/1000)*(i.finishedWmm/1000);
+  const pcsPerBatch=i.pcsPerPlate*i.platesPerBatch;
+  const batchesPerMonth=i.batchesPerWeek*i.weeksPerMonth;
+  const batchesPerYear=batchesPerMonth*i.monthsPerYear;
+  const sinterGreenPcs=batchesPerYear*pcsPerBatch;
+  const goodPcsYear=sinterGreenPcs*i.sinterYield;
+  const goodPcsMonth=batchesPerMonth*pcsPerBatch*i.sinterYield;
+  const annualM2=pieceAreaM2*goodPcsYear;
+  const coatingPcs=safeDiv(sinterGreenPcs,i.coatingYield);
+  const greenVolCm3=(greenLmm/10)*(greenWmm/10)*(greenTmm/10);
+  const webWidthMm=greenWmm*i.webUp+i.edgeMm;
+  const coatLengthM=safeDiv(coatingPcs,i.webUp)*(greenLmm/1000);
+  const coatAreaM2=coatLengthM*(webWidthMm/1000);
+  const slurryKgFromParts=(coatingPcs*greenVolCm3*i.slurryDensity)/1000;
+  const slurryKgFromWeb=coatAreaM2*greenTmm*i.slurryDensity;
+  const slurryKgGross=i.includeEdgeSlurry?slurryKgFromWeb:slurryKgFromParts;
+  const slurryKgMix=safeDiv(slurryKgGross,i.mixYield);
+  const slurryL=safeDiv(slurryKgMix,i.slurryDensity);
+  const recipeTotalG=i.recipe.reduce((s,r)=>s+r.grams,0);
+  const recipeLines=i.recipe.map(item=>{
+    const proportion=safeDiv(item.grams,recipeTotalG);
+    const kgYear=slurryKgMix*proportion;
+    return {item, proportion, kgYear, ntdYear: kgYear*item.price};
+  });
+  const recipeNtd=recipeLines.reduce((s,r)=>s+r.ntdYear,0);
+  const hourlyOp=safeDiv(i.opSalaryMonthly,i.hoursPerMonth);
+  const mixBatches=safeDiv(slurryL,i.mixerL);
+  const mixEnergy=i.mixHrProcess*mixBatches*i.mixerKw*i.elecNtdPerKwh;
+  const mixLabor=i.mixOp*mixBatches*i.mixHrLabor*hourlyOp;
+  const petNtd=coatAreaM2*i.petNtdPerM2;
+  const coatHr=safeDiv(coatLengthM,i.coaterMPerMin)/60;
+  const coatEnergy=coatHr*i.coaterKw*i.elecNtdPerKwh;
+  const coatLabor=i.coatOp*coatHr*hourlyOp;
+  const furnaceBatches=safeDiv(sinterGreenPcs,pcsPerBatch);
+  const n2Ntd=i.includeProcessGas?i.n2Sets*i.n2CostPerSet*furnaceBatches:0;
+  const h2Ntd=i.includeProcessGas?i.h2Sets*i.h2CostPerSet*furnaceBatches:0;
+  const arNtd=i.arSets*i.arCostPerSet*furnaceBatches;
+  const gasNtd=n2Ntd+h2Ntd+arNtd;
+  const sinterEnergy=i.kwhPerSinterBatch*i.elecNtdPerKwh*furnaceBatches;
+  const sinterLabor=i.sinterOp*i.sinterHrLabor*hourlyOp*furnaceBatches;
+  const machineNtd=safeDiv(safeDiv(goodPcsYear,i.machinePcsPerMin),60)*i.machineNtdPerHr;
+  const stations=[
+    {name:"混漿 Mixing", materials:recipeNtd, process:mixEnergy, labor:mixLabor},
+    {name:"塗佈 Coating", materials:petNtd, process:coatEnergy, labor:coatLabor},
+    {name:"燒結 Sintering", materials:gasNtd, process:sinterEnergy, labor:sinterLabor},
+    {name:"加工 Machining", materials:0, process:machineNtd, labor:0}
+  ];
+  const materialsAnnual=stations.reduce((s,x)=>s+x.materials,0);
+  const processAnnual=stations.reduce((s,x)=>s+x.process,0);
+  const laborAnnual=stations.reduce((s,x)=>s+x.labor,0);
+  const mfgAnnual=materialsAnnual+processAnnual+laborAnnual;
+  const mfgPerPc=safeDiv(mfgAnnual,goodPcsYear);
+  const qcDays=safeDiv(goodPcsYear,i.qcPcsPerCycle)*i.qcWorkingDays;
+  const qcAnnual=i.qcPersons*qcDays*i.qcHoursPerDay*i.qcNtdPerHr;
+  const qcPerPc=safeDiv(qcAnnual,goodPcsYear);
+  const amortPerPc=safeDiv(i.capexNtd,i.amortYears*goodPcsYear);
+  const maintPerPc=safeDiv(i.capexNtd*i.maintPctOfCapex,goodPcsYear);
+  const share=i.plantShare<=0?1:i.plantShare;
+  const rentPerPc=safeDiv(i.rentMonthly,goodPcsMonth*share);
+  const others=i.otherSalaries.reduce((s,x)=>s+x,0);
+  const personnelMonthly=i.rd1Monthly+safeDiv(others,i.othersDivisor);
+  const personnelPerPc=safeDiv(personnelMonthly,goodPcsMonth*share);
+  const extraStaffPerPc=safeDiv(i.extraMaintStaffMonthly,goodPcsMonth*share);
+  const indirectPerPc=(rentPerPc+personnelPerPc+extraStaffPerPc)*(1+i.indirectBuffer);
+  const sheetLikePerPc=mfgPerPc+qcPerPc+amortPerPc+rentPerPc+personnelPerPc;
+  const totalPerPc=mfgPerPc+qcPerPc+amortPerPc+maintPerPc+indirectPerPc;
+  const totalPerM2=safeDiv(totalPerPc,pieceAreaM2);
+  const totalUsdPerM2=totalPerM2*i.usdPerNtd;
+  const lines=[
+    ["製造·材料", safeDiv(materialsAnnual,goodPcsYear)],
+    ["製造·能源／加工", safeDiv(processAnnual,goodPcsYear)],
+    ["製造·產線人工", safeDiv(laborAnnual,goodPcsYear)],
+    ["QC 品檢", qcPerPc],
+    ["設備攤提", amortPerPc],
+    ["設備維護", maintPerPc],
+    ["租金分攤", rentPerPc*(1+i.indirectBuffer)],
+    ["後勤人事分攤", personnelPerPc*(1+i.indirectBuffer)],
+    ["維護人力分攤", extraStaffPerPc*(1+i.indirectBuffer)]
+  ];
+  return {greenLmm,greenWmm,greenTmm,pieceAreaM2,pcsPerBatch,batchesPerYear,sinterGreenPcs,goodPcsYear,goodPcsMonth,annualM2,coatingPcs,slurryKgMix,recipeLines,stations,mfgPerPc,qcAnnual,qcPerPc,amortPerPc,maintPerPc,rentPerPc,personnelPerPc,extraStaffPerPc,indirectPerPc,sheetLikePerPc,totalPerPc,totalPerM2,totalUsdPerM2,lines};
+}
+
+function bridge(cost, r){
+  const usd=cost.usdPerNtd;
+  const goodM2=Math.max(r.annualM2,1e-9);
+  const y=Math.max(cost.sinterYield*cost.coatingYield,0.01);
+  const startM2=goodM2/y;
+  const mix=r.stations[0], coat=r.stations[1], sinter=r.stations[2], machine=r.stations[3];
+  const mat=(mix.materials+coat.materials)*usd/startM2;
+  const form=(mix.process+mix.labor+coat.process+coat.labor)*usd/startM2;
+  const sint=(sinter.materials+sinter.process+sinter.labor)*usd/startM2;
+  const mach=(machine.process+machine.labor)*usd/goodM2;
+  const qc=r.qcAnnual*usd/goodM2;
+  return {
+    prodName: cost.productName,
+    len: cost.finishedLmm, wid: cost.finishedWmm, thk: cost.finishedTmm, unit:"mm",
+    yieldPct: y*100, allocM2: goodM2,
+    vars: [
+      {id:"mat", name:"1. 原材料（粉／黏結劑／PET）", usd:mat, base:"start"},
+      {id:"form", name:"2. 成形（混漿＋塗佈 電與工）", usd:form, base:"start"},
+      {id:"sint", name:"3. 燒結（電／氬氣／工時）", usd:sint, base:"start"},
+      {id:"mach", name:"4. 加工（燒後切割）", usd:mach, base:"good"},
+      {id:"qc", name:"5. 品檢", usd:qc, base:"good"}
+    ],
+    eqYr: (r.amortPerPc+r.maintPerPc)*r.goodPcsYear*usd,
+    rentYr: r.indirectPerPc*r.goodPcsYear*usd,
+    utilYr: 0
+  };
+}
+
+function isoWeek(d){
+  const date=new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day=date.getUTCDay()||7;
+  date.setUTCDate(date.getUTCDate()+4-day);
+  const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  const week=Math.ceil(((date.getTime()-yearStart.getTime())/86400000+1)/7);
+  return {yy:String(date.getUTCFullYear()).slice(-2), ww:String(week).padStart(2,"0")};
+}
+function quoteNumber(){
+  const {yy,ww}=isoWeek(new Date());
+  return "C"+document.getElementById("q_ccode").value+yy+ww+String(Math.max(1,Math.min(99,n("q_serial")||1))).padStart(2,"0");
+}
+function toM(val,unit){
+  if(unit==="mm") return val/1000;
+  if(unit==="cm") return val/100;
+  if(unit==="in") return val*0.0254;
+  return val;
+}
+function roundPc(raw){ return raw<10 ? Math.round(raw*10000)/10000 : Math.round(raw*100)/100; }
+
+function readVars(){
+  const ids=["mat","form","sint","mach","qc"];
+  return ids.map(id=>({
+    id, name: txt("vname_"+id) || id,
+    usd: n("vu_"+id),
+    base: document.getElementById("vb_"+id).value
+  }));
+}
+
+function computeQuote(vars){
+  const unit=document.getElementById("q_unit").value;
+  const areaPc=Math.max(toM(n("q_len"),unit)*toM(n("q_wid"),unit),0);
+  const pcs=Math.max(n("q_pcs"),0);
+  const goodM2=pcs*areaPc;
+  const y=Math.max(n("q_yieldPct"),0.01)/100;
+  const startM2=goodM2/y;
+  const alloc=Math.max(n("q_allocM2"),0.0001);
+  const rentPer=n("q_rentYr")/alloc;
+  const eqPer=n("q_eqYr")/alloc;
+  const utilPer=n("q_utilYr")/alloc;
+  const factoryFixedPer=rentPer+eqPer+utilPer;
+  const varRows=vars.map(v=>{
+    const m2=v.base==="start"?startM2:goodM2;
+    const line=v.usd*m2;
+    return {...v, m2, line, perGood: goodM2>0?line/goodM2:0};
+  });
+  const varPerGood=varRows.reduce((s,r)=>s+r.perGood,0);
+  const cogs=varPerGood+factoryFixedPer;
+  const mark=n("q_factoryMark")/100;
+  const priceA=cogs*(1+mark);
+  const gpAPer=priceA-cogs;
+  const gpA=gpAPer*goodM2;
+  const factoryGmPct=mark>0?(mark/(1+mark))*100:0;
+  const tier=document.getElementById("q_sampleTier").value;
+  let priceB=priceA, nre=0, rdPer=0;
+  if(tier==="standard"){
+    priceB=priceA*Math.max(n("q_stdMultiplier"),1);
+    rdPer=priceB-priceA; nre=0;
+  } else {
+    const rd=Math.max(n("q_rdPct"),0)/100;
+    priceB=priceA/Math.max(1-rd,0.05);
+    rdPer=priceB*rd;
+    nre=Math.max(n("q_nreFee"),0);
+  }
+  const prodB=priceB*goodM2;
+  const dealB=prodB+nre;
+  const track=document.getElementById("q_track").value;
+  const issuedM2=track==="A"?priceA:priceB;
+  const issuedPc=roundPc(issuedM2*areaPc);
+  const list=n("q_listPx");
+  return {areaPc,goodM2,startM2,varRows,varPerGood,rentPer,eqPer,utilPer,factoryFixedPer,cogs,priceA,gpAPer,gpA,priceB,nre,prodB,dealB,rdPer,issuedM2,issuedPc,factoryGmPct,track,tier,listGap:list-cogs,coversList:(list-cogs)>=0,quoteNo:quoteNumber(),moqWarn:track==="B"&&tier==="standard"&&pcs<20};
+}
+
+function applyBridge(b){
+  setv("q_prodName", b.prodName);
+  setv("q_len", b.len); setv("q_wid", b.wid); setv("q_thk", b.thk);
+  document.getElementById("q_unit").value="mm";
+  setv("q_yieldPct", (Math.round(b.yieldPct*100)/100).toFixed(2));
+  setv("q_allocM2", b.allocM2.toFixed(4));
+  setv("q_eqYr", Math.round(b.eqYr));
+  setv("q_rentYr", Math.round(b.rentYr));
+  setv("q_utilYr", b.utilYr);
+  lastVars=b.vars;
+}
+
+let lastVars=[];
+let linkedUserOff=false;
+
+function onLinkToggle(){
+  if(!document.getElementById("q_linked").checked) linkedUserOff=true;
+  else linkedUserOff=false;
+  recalc();
+}
+function unlink(){
+  document.getElementById("q_linked").checked=false;
+  linkedUserOff=true;
+}
+function editQuoteDim(){ unlink(); recalc(); }
+function editQuoteFin(){ unlink(); recalc(); }
+
+function renderVars(rows){
+  const active=document.activeElement;
+  const aid=active && active.id;
+  const apos=active && typeof active.selectionStart==="number" ? active.selectionStart : null;
+  document.getElementById("varBody").innerHTML = rows.map(r=>`
+    <tr>
+      <td class="l">${r.name}<input type="hidden" id="vname_${r.id}" value="${r.name}"></td>
+      <td><input id="vu_${r.id}" type="number" step="0.0001" value="${Number(r.usd).toFixed(4)}" oninput="unlink();recalc()"></td>
+      <td>
+        <select id="vb_${r.id}" onchange="unlink();recalc()">
+          <option value="start" ${r.base==="start"?"selected":""}>投料</option>
+          <option value="good" ${r.base==="good"?"selected":""}>良品</option>
+        </select>
+      </td>
+      <td class="num">${r.m2.toFixed(4)}</td>
+      <td class="num">${money(r.line)}</td>
+      <td class="num">${money(r.perGood)}</td>
+    </tr>`).join("") + `<tr style="font-weight:700;background:#fffaf6"><td class="l">變動合計 / good m²</td><td></td><td></td><td></td><td></td><td class="num">${money(rows.reduce((s,r)=>s+r.perGood,0))}</td></tr>`;
+  if(aid && document.getElementById(aid)){
+    const el=document.getElementById(aid);
+    el.focus();
+    try{ if(apos!=null) el.setSelectionRange(apos,apos);}catch(e){}
+  }
+}
+
+function row(l,v){ return `<tr><td class="l">${l}</td><td class="num">${v}</td></tr>`; }
+
+function recalc(){
+  const cost=costInputs();
+  const r=computeCost(cost);
+  document.getElementById("k_ntdPc").textContent=fmt(r.totalPerPc,1)+" NTD";
+  document.getElementById("k_usdM2").textContent=fmt(r.totalUsdPerM2,1);
+  document.getElementById("k_sheet").textContent=fmt(r.sheetLikePerPc,1);
+  document.getElementById("k_pcs").textContent=Math.round(r.goodPcsYear).toLocaleString("zh-TW")+" pcs/年";
+  document.getElementById("k_note").textContent=`生胚 ${fmt(r.greenLmm,1)} × ${fmt(r.greenWmm,1)} × ${fmt(r.greenTmm,2)} mm。年爐次 ${r.batchesPerYear}。單純製造 ${fmt(r.mfgPerPc,1)} NTD/片。`;
+  document.getElementById("costLines").innerHTML=r.lines.map(([k,v])=>row(k,fmt(v,2)+" NTD")).join("")+row("<b>合計</b>","<b>"+fmt(r.totalPerPc,1)+" NTD</b>");
+  document.getElementById("stationBody").innerHTML=r.stations.map(s=>`<tr><td class="l">${s.name}</td><td class="num">${fmt(s.materials,0)}</td><td class="num">${fmt(s.process,0)}</td><td class="num">${fmt(s.labor,0)}</td></tr>`).join("");
+  const recActive=document.activeElement && String(document.activeElement.id||"").startsWith("r_");
+  if(!recActive){
+    document.getElementById("recipeBody").innerHTML=r.recipeLines.map((line,i)=>`
+      <tr>
+        <td class="l"><input id="r_n${i}" type="text" value="${line.item.name}" oninput="recalc()"></td>
+        <td><input id="r_g${i}" type="number" step="any" value="${line.item.grams}" oninput="recalc()"></td>
+        <td><input id="r_p${i}" type="number" step="any" value="${line.item.price}" oninput="recalc()"></td>
+        <td class="num">${fmt(line.kgYear,2)}</td>
+        <td class="num">${fmt(line.ntdYear,0)}</td>
+      </tr>`).join("");
+  } else {
+    r.recipeLines.forEach((line,i)=>{
+      const kg=document.querySelector(`#recipeBody tr:nth-child(${i+1}) td:nth-child(4)`);
+      const nt=document.querySelector(`#recipeBody tr:nth-child(${i+1}) td:nth-child(5)`);
+      if(kg) kg.textContent=fmt(line.kgYear,2);
+      if(nt) nt.textContent=fmt(line.ntdYear,0);
+    });
+  }
+
+  const linked=document.getElementById("q_linked").checked && !linkedUserOff;
+  if(linked) applyBridge(bridge(cost,r));
+  const vars = (document.getElementById("vu_mat") ? readVars() : (lastVars.length?lastVars:bridge(cost,r).vars));
+  const q=computeQuote(vars);
+  lastVars=q.varRows;
+  renderVars(q.varRows);
+  document.getElementById("q_quoteNo").value=q.quoteNo;
+  document.getElementById("q_areaPc").textContent=q.areaPc.toFixed(6)+" m²";
+  document.getElementById("q_startM2").textContent=q.startM2.toFixed(4)+" m²";
+  document.getElementById("moqHint").innerHTML=q.moqWarn?`<span class="bad">標準現品建議 MOQ 20 pcs，現在是 ${n("q_pcs")}。</span>`:`本單良品 ${q.goodM2.toFixed(4)} m²。訂單片數不是年產能。`;
+  document.getElementById("quoteA").innerHTML=
+    row("變動 / good m²", money(q.varPerGood))+
+    row("廠租後勤 / m²", money(q.rentPer))+
+    row("設備 / m²", money(q.eqPer))+
+    row("公用 / m²", money(q.utilPer))+
+    row("<b>COGS / m²</b>", "<b>"+money(q.cogs)+"</b>")+
+    row("Markup "+n("q_factoryMark")+"%", money(q.gpAPer))+
+    row("單價 / m²", money(q.priceA))+
+    row("單價 / pc", money(q.priceA*q.areaPc, q.priceA*q.areaPc<10?4:2))+
+    row("本單總價", money(q.priceA*q.goodM2));
+  document.getElementById("aPrice").innerHTML=money(q.priceA)+" / m²<br>"+money(q.priceA*q.areaPc,2)+" / pc";
+  document.getElementById("aGp").textContent=money(q.gpA);
+  const tierName=q.tier==="standard"?"標準現品 1.5×":"客製研發";
+  document.getElementById("tagB").textContent=q.tier==="standard"?"標準現品":"客製研發";
+  document.getElementById("quoteB").innerHTML=
+    row("策略", tierName)+
+    row("基底 Quote A", money(q.priceA)+" / m²")+
+    row("樣品單價 / m²", money(q.priceB))+
+    row("樣品單價 / pc", money(q.priceB*q.areaPc, q.priceB*q.areaPc<10?4:2))+
+    row("產品總價", money(q.prodB))+
+    row("NRE", money(q.nre))+
+    row("<b>案總額</b>", "<b>"+money(q.dealB)+"</b>");
+  document.getElementById("bPrice").innerHTML=money(q.priceB)+" / m²<br>"+money(q.priceB*q.areaPc,2)+" / pc";
+  document.getElementById("bDeal").textContent=money(q.dealB);
+  document.getElementById("cA").innerHTML=money(q.priceA)+" / m²<br>"+money(q.priceA*q.areaPc,2)+" / pc";
+  document.getElementById("cB").innerHTML=money(q.priceB)+" / m²<br>"+money(q.priceB*q.areaPc,2)+" / pc";
+  document.getElementById("cDiff").textContent=money(q.priceB-q.priceA);
+  const el500=document.getElementById("c500");
+  el500.textContent=q.coversList?"達標 "+money(q.listGap):"短缺 "+money(q.listGap);
+  el500.className=q.coversList?"ok":"bad";
+  document.getElementById("advice").textContent=
+    `工廠 COGS ${money(q.cogs)}/m²（成本頁 ${fmt(r.totalUsdPerM2,1)} USD/m²）。發行 ${q.track==="A"?"Quote A":"Quote B"} 單價 ${money(q.issuedM2)}/m²（${money(q.issuedPc,q.issuedPc<10?4:2)}/pc）。工廠 GM ${fmt(q.factoryGmPct,1)}%。`+
+    (q.track==="B"&&q.tier==="custom"?` 客製 NRE ${money(q.nre)} 可在轉量產時折抵。`:"");
+  document.getElementById("linkHint").textContent=linked
+    ? `已橋接。COGS ${money(q.cogs)}/m²，應對齊成本 ${fmt(r.totalUsdPerM2,1)} USD/m²。年產能分攤用本產品年產出 ${fmt(r.annualM2,1)} m²。`
+    : "已解除跟隨。尺寸、良率、年費、製程單價現在是報價頁自己的數字。";
+  document.getElementById("ticker").innerHTML=
+    `<div><b>${fmt(r.totalUsdPerM2,1)}</b> <span>USD/m² 工廠</span></div>`+
+    `<div><b>${fmt(r.totalPerPc,1)}</b> <span>NTD/pcs</span></div>`+
+    `<div><b>${money(q.issuedM2)}</b> <span>${q.track==="A"?"Quote A":"Quote B"} / m²</span></div>`+
+    `<div><b>${money(q.issuedPc,q.issuedPc<10?4:2)}</b> <span>/ pc 發行價</span></div>`+
+    `<div><span>${q.quoteNo}</span></div>`;
+  document.getElementById("tierBox").style.display = document.getElementById("q_track").value==="B" ? "block" : "none";
+  window.__last = {cost,r,q,vars:q.varRows};
+}
+
+function setTab(tab){
+  document.getElementById("tabCost").classList.toggle("hidden", tab!=="cost");
+  document.getElementById("tabQuote").classList.toggle("hidden", tab!=="quote");
+  document.getElementById("btnCost").classList.toggle("on", tab==="cost");
+  document.getElementById("btnQuote").classList.toggle("on", tab==="quote");
+}
+
+function xmlEsc(s){
+  return String(s)
+    .replace(/&/g, "\u0026amp;")
+    .replace(/</g, "\u0026lt;")
+    .replace(/>/g, "\u0026gt;")
+    .replace(/"/g, "\u0026quot;");
+}
+function fmtDate(d){
+  const mon=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return d.getFullYear()+"/"+mon[d.getMonth()]+"/"+String(d.getDate()).padStart(2,"0");
+}
+function exportQuote(){
+  const box=document.getElementById("exportErr");
+  box.classList.remove("show"); box.innerHTML="";
+  const missing=[];
+  if(!txt("q_custName").trim()) missing.push("客戶公司");
+  if(!txt("q_custContact").trim()) missing.push("聯絡人");
+  if(!txt("q_custEmail").trim()) missing.push("電子信箱");
+  if(n("q_pcs")<=0) missing.push("片數");
+  if(missing.length){
+    box.classList.add("show");
+    box.innerHTML="<b>還有欄位未填，無法匯出。</b> "+missing.join("、");
+    setTab("quote");
+    box.scrollIntoView({behavior:"smooth"});
+    return;
+  }
+  recalc();
+  const q=window.__last.q;
+  const today=new Date();
+  const until=new Date(today.getTime()+30*86400000);
+  const dim=n("q_len")+" "+document.getElementById("q_unit").value+" x "+n("q_wid")+" "+document.getElementById("q_unit").value+" x "+n("q_thk")+" "+document.getElementById("q_unit").value;
+  const goods=q.issuedPc*n("q_pcs");
+  const nre=q.track==="B"?q.nre:0;
+  const vat=(goods+nre)*n("q_vatPct")/100;
+  const tariff=document.getElementById("q_addTariff").value==="1"?n("q_tariffUsd"):0;
+  const freight=n("q_freightUsd");
+  const total=goods+nre+vat+tariff+freight;
+  const nreRow = nre>0 ? `<Row>
+    <Cell><Data ss:Type="String">1-2</Data></Cell>
+    <Cell ss:MergeAcross="2"><Data ss:Type="String">One-time R and D engineering and setup (rebate on volume order)</Data></Cell>
+    <Cell><Data ss:Type="String">batch</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">${nre}</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">${nre}</Data></Cell>
+  </Row>` : "";
+  const xml=`<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles>
+  <Style ss:ID="Default"><Font ss:FontName="Calibri" ss:Size="11"/></Style>
+  <Style ss:ID="h"><Font ss:Bold="1" ss:Size="16" ss:Color="#E85D04"/></Style>
+  <Style ss:ID="n"><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="m"><Font ss:Color="#64748B"/></Style>
+</Styles>
+<Worksheet ss:Name="Quotation">
+<Table>
+  <Row><Cell ss:StyleID="h"><Data ss:Type="String">CellMo Materials Innovation</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Quotation ${xmlEsc(q.quoteNo)}</Data></Cell></Row>
+  <Row><Cell ss:StyleID="m"><Data ss:Type="String">${q.track==="A"?"Quote A volume":"Quote B sample"} · valid until ${fmtDate(until)}</Data></Cell></Row>
+  <Row/>
+  <Row><Cell><Data ss:Type="String">Date</Data></Cell><Cell><Data ss:Type="String">${fmtDate(today)}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">To</Data></Cell><Cell><Data ss:Type="String">${xmlEsc(txt("q_custName"))}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Contact</Data></Cell><Cell><Data ss:Type="String">${xmlEsc(txt("q_custContact"))}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Email</Data></Cell><Cell><Data ss:Type="String">${xmlEsc(txt("q_custEmail"))}</Data></Cell></Row>
+  <Row/>
+  <Row>
+    <Cell><Data ss:Type="String">Item</Data></Cell>
+    <Cell><Data ss:Type="String">Description</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">Unit</Data></Cell>
+    <Cell><Data ss:Type="String">Unit price USD</Data></Cell>
+    <Cell><Data ss:Type="String">Qty</Data></Cell>
+    <Cell><Data ss:Type="String">Amount USD</Data></Cell>
+  </Row>
+  <Row>
+    <Cell><Data ss:Type="String">1-1</Data></Cell>
+    <Cell ss:MergeAcross="2"><Data ss:Type="String">${xmlEsc(txt("q_prodName"))}, ${xmlEsc(dim)} (${q.areaPc.toFixed(4)} m2/pc)</Data></Cell>
+    <Cell><Data ss:Type="String">pcs</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">${q.issuedPc}</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">${n("q_pcs")}</Data></Cell>
+    <Cell ss:StyleID="n"><Data ss:Type="Number">${goods}</Data></Cell>
+  </Row>
+  ${nreRow}
+  <Row/>
+  <Row><Cell><Data ss:Type="String">Incoterm</Data></Cell><Cell><Data ss:Type="String">${xmlEsc(txt("q_incoterm"))}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Lead time</Data></Cell><Cell><Data ss:Type="String">${n("q_ltWeeks")} weeks</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">HS code</Data></Cell><Cell><Data ss:Type="String">${xmlEsc(txt("q_hs"))}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">VAT ${n("q_vatPct")}%</Data></Cell><Cell ss:StyleID="n"><Data ss:Type="Number">${vat}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Tariff</Data></Cell><Cell ss:StyleID="n"><Data ss:Type="Number">${tariff}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">FedEx</Data></Cell><Cell ss:StyleID="n"><Data ss:Type="Number">${freight}</Data></Cell></Row>
+  <Row><Cell><Data ss:Type="String">Total USD</Data></Cell><Cell ss:StyleID="n"><Data ss:Type="Number">${total}</Data></Cell></Row>
+  <Row/>
+  <Row><Cell ss:StyleID="m"><Data ss:Type="String">Customer file. Factory cost is not shown.</Data></Cell></Row>
+</Table>
+</Worksheet>
+</Workbook>`;
+  const blob=new Blob([xml],{type:"application/vnd.ms-excel"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="Quotation_"+q.quoteNo+".xls";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function resetAll(){ location.reload(); }
+
+function fillDefaults(){
+  const c={
+    productName:"Toyota Gosei SUS RDS 608",
+    finishedLmm:297, finishedWmm:210, finishedTmm:0.4, shrink:0.1, wetTmm:0.7,
+    plateLmm:750, plateWmm:430, pcsPerPlate:3, platesPerBatch:20,
+    batchesPerWeek:5, weeksPerMonth:4, monthsPerYear:12,
+    sinterYield:0.9, coatingYield:0.9, mixYield:0.95, slurryDensity:2,
+    webUp:2, edgeMm:30, petNtdPerM2:10.4,
+    elecNtdPerKwh:6, opSalaryMonthly:35000, hoursPerMonth:160,
+    mixerL:50, mixHrProcess:6, mixHrLabor:8, mixerKw:5.5, mixOp:1,
+    coaterMPerMin:0.5, coaterKw:120, coatOp:2,
+    kwhPerSinterBatch:1500, arSets:0.25, arCostPerSet:5800, sinterOp:2, sinterHrLabor:2,
+    machinePcsPerMin:10, machineNtdPerHr:1000,
+    qcPcsPerCycle:1400, qcWorkingDays:10, qcPersons:1, qcNtdPerHr:411, qcHoursPerDay:8,
+    capexNtd:4150000, amortYears:7, maintPctOfCapex:0.08,
+    rentMonthly:500000, plantShare:7, rd1Monthly:345580, othersDivisor:2,
+    extraMaintStaffMonthly:120000, indirectBuffer:0.2, usdPerNtd:0.031
+  };
+  Object.keys(c).forEach(k=>setv("c_"+k, c[k]));
+  setv("c_o1",295870); setv("c_o2",159727); setv("c_o3",215649); setv("c_o4",172602); setv("c_o5",342512);
+  document.getElementById("recipeBody").innerHTML=RECIPE_DEFAULT.map((r,i)=>`
+    <tr>
+      <td class="l"><input id="r_n${i}" type="text" value="${r.name}" oninput="recalc()"></td>
+      <td><input id="r_g${i}" type="number" step="any" value="${r.g}" oninput="recalc()"></td>
+      <td><input id="r_p${i}" type="number" step="any" value="${r.p}" oninput="recalc()"></td>
+      <td class="num">—</td><td class="num">—</td>
+    </tr>`).join("");
+}
+
+fillDefaults();
+recalc();
+</script>
+</body>
+</html>
