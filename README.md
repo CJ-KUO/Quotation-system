@@ -56,11 +56,11 @@ Variable USD / m² (placeholders until real BOM is keyed):
 
 | Step | USD / m² | Basis |
 |---|---:|---|
-| Raw materials | 180 | started area |
-| Forming | 40 | started area |
-| Sintering | 45 | started area |
-| Machining | 25 | good area |
-| QC | 10 | good area |
+| Raw materials | 100 | started area |
+| Forming | 100 | started area |
+| Sintering | 100 | started area |
+| Machining | 100 | good area |
+| QC | 100 | good area |
 
 Plant fixed (USD / year), allocated by annual m²:
 
